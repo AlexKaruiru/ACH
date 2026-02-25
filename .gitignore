@@ -1,0 +1,28 @@
+## Visual Studio Build Outputs
+[Bb]in/
+[Oo]bj/
+# Exclude specific extensions often found in bin/obj
+*.exe
+*.dll
+*.pdb
+*.manifest
+*.vshost.*
+
+## Visual Studio User Settings
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Log files
+*.log
+log.txt
+
+## Packages folder (Standard for older .NET projects using NuGet)
+packages/
+
+## OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini

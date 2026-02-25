@@ -1,0 +1,217 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{0B40E3FF-BA24-49A8-A0BD-A185E4BA07B0}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>BRNETUploadDownload</RootNamespace>
+    <AssemblyName>BRNETUploadDownload</AssemblyName>
+    <StartupObject>
+    </StartupObject>
+    <ApplicationIcon>BRCBS.ico</ApplicationIcon>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="BALProviders, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ParamountDotNet\Libraries\BALProviders.dll</HintPath>
+    </Reference>
+    <Reference Include="BRBALLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ParamountDotNet\Libraries\BRBALLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="BRBase">
+      <HintPath>..\..\BRClearing\bin\BRBase.dll</HintPath>
+    </Reference>
+    <Reference Include="BRCoreEntities, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\BRCoreEntities.dll</HintPath>
+    </Reference>
+    <Reference Include="BRDALLibrary, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\ParamountDotNet\BRDALLibrary\obj\Debug\BRDALLibrary.dll</HintPath>
+    </Reference>
+    <Reference Include="BRDALUtilities, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\BRDALUtilities.dll</HintPath>
+    </Reference>
+    <Reference Include="BrDataEncryption, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\BrDataEncryption\bin\Debug\BrDataEncryption.dll</HintPath>
+    </Reference>
+    <Reference Include="BREntities, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\BREntities.dll</HintPath>
+    </Reference>
+    <Reference Include="BRNetSecurity, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\BRNet Projects\BRNet_UFT\Kamunya\Final work\BRScanner-Ex\Libraries\BRNetSecurity.dll</HintPath>
+    </Reference>
+    <Reference Include="BRSecurity, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\BRSecurity.dll</HintPath>
+    </Reference>
+    <Reference Include="EncryptDecrypt, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="MySQL.Data, Version=1.0.4.29865, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libraries\MySQL.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmFileStatus.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmFileStatus.Designer.cs">
+      <DependentUpon>frmFileStatus.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmLogin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmLogin.Designer.cs">
+      <DependentUpon>frmLogin.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmMIPsToBRUpload.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmMIPsToBRUpload.Designer.cs">
+      <DependentUpon>frmMIPsToBRUpload.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MFI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MFI.Designer.cs">
+      <DependentUpon>MFI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmFileStatus.resx">
+      <DependentUpon>frmFileStatus.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmLogin.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>frmLogin.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmMIPsToBRUpload.resx">
+      <DependentUpon>frmMIPsToBRUpload.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MFI.resx">
+      <DependentUpon>MFI.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="ClassDiagram1.cd" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <WebReferences Include="Web References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="BRCBS.ico" />
+    <Content Include="BRealm.ico" />
+    <None Include="Resources\Login4.bmp" />
+    <None Include="Resources\log_img6.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BRClearing\BRClearing.csproj">
+      <Project>{c97272cd-309a-4122-adb7-506ad052b013}</Project>
+      <Name>BRClearing</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BRClrAlDigiSign\BRClrAlDigiSign.csproj">
+      <Project>{8a78dfa2-3d11-4dd8-8546-52183e7f77ff}</Project>
+      <Name>BRClrAlDigiSign</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BRRTGSProcessing\BRRTGSProcessing.csproj">
+      <Project>{455b316c-4e24-46f4-8e33-8d5fefa1e11e}</Project>
+      <Name>BRRTGSProcessing</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Common\CommonMods.vbproj">
+      <Project>{0f3e7d73-d3c7-415e-98f9-8cb1dcb116ae}</Project>
+      <Name>CommonMods</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

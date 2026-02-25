@@ -1,0 +1,460 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{0F3E7D73-D3C7-415E-98F9-8CB1DCB116AE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>BrClearing.Common</RootNamespace>
+    <AssemblyName>BrClearing</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <MyType>Windows</MyType>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <OptionExplicit>On</OptionExplicit>
+    <OptionCompare>Binary</OptionCompare>
+    <OptionStrict>Off</OptionStrict>
+    <OptionInfer>On</OptionInfer>
+    <StartupObject>
+    </StartupObject>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <PublishUrl>http://localhost/BrClearing/</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Web</InstallFrom>
+    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DocumentationFile>BrClearing.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022,42353,42354,42355</NoWarn>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DocumentationFile>BrClearing.xml</DocumentationFile>
+    <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022,42353,42354,42355</NoWarn>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto, Version=1.7.4137.9688, Culture=neutral, PublicKeyToken=a4292a325f69b123, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
+    <Reference Include="BRBase, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\BRBase.dll</HintPath>
+    </Reference>
+    <Reference Include="BRClearingEncryptDecrypt">
+      <HintPath>..\..\..\Guardian Bank\Guardian Upgrade\Guardian Incoming Service\Common\bin\Debug\BRClearingEncryptDecrypt.dll</HintPath>
+    </Reference>
+    <Reference Include="BRConfiguration, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\BRConfiguration.dll</HintPath>
+    </Reference>
+    <Reference Include="BRCoreEntities, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\BRCoreEntities.dll</HintPath>
+    </Reference>
+    <Reference Include="BRDALUtilities, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\BRDALUtilities.dll</HintPath>
+    </Reference>
+    <Reference Include="BrDataEncryption, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\BrDataEncryption.dll</HintPath>
+    </Reference>
+    <Reference Include="BREntities, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Utility\New folder (2)\Utility\Utility for All scanners in One\Final work\BRScanner-Ex\Common\bin\Debug\BREntities.dll</HintPath>
+    </Reference>
+    <Reference Include="BRNetSecurity">
+      <HintPath>..\BRClearing\bin\BRNetSecurity.dll</HintPath>
+    </Reference>
+    <Reference Include="BRRTGSProcessing">
+      <HintPath>..\..\..\Guardian Bank\Guardian Upgrade\Guardian Incoming Service\Common\bin\Debug\BRRTGSProcessing.dll</HintPath>
+    </Reference>
+    <Reference Include="BRSecurity, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\BRSecurity.dll</HintPath>
+    </Reference>
+    <Reference Include="CSI_ImageControl, Version=1.0.2593.18476, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\CSI_ImageControl.dll</HintPath>
+    </Reference>
+    <Reference Include="Ionic.Zip, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\Ionic.Zip.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic.Compatibility" />
+    <Reference Include="MySQL.Data, Version=1.0.4.22018, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\MySQL.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="PasswordEncrypt, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Utility\New folder (2)\Utility\Utility for All scanners in One\Final work\BRScanner-Ex\Common\bin\Debug\PasswordEncrypt.dll</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.OracleClient" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Import Include="Microsoft.VisualBasic" />
+    <Import Include="System" />
+    <Import Include="System.Collections" />
+    <Import Include="System.Collections.Generic" />
+    <Import Include="System.Data" />
+    <Import Include="System.Diagnostics" />
+    <Import Include="System.Linq" />
+    <Import Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Forms\FrmBROutFile.designer.vb">
+      <DependentUpon>FrmBROutFile.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\FrmBROutFile.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmIncoming.designer.vb">
+      <DependentUpon>frmIncoming.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmIncoming.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmMDVET.Designer.vb">
+      <DependentUpon>frmMDVET.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmMDVET.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmMDVTZ.Designer.vb">
+      <DependentUpon>frmMDVTZ.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmMDVTZ.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmMDVUG.Designer.vb">
+      <DependentUpon>frmMDVUG.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmMDVUG.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmEncryptEFT.Designer.vb">
+      <DependentUpon>frmEncryptEFT.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmEncryptEFT.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmBRChequesSearchClearing.Designer.vb">
+      <DependentUpon>frmBRChequesSearchClearing.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmBRChequesSearchClearing.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmBRImageNSignatureView.Designer.vb">
+      <DependentUpon>frmBRImageNSignatureView.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmBRImageNSignatureView.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmMain.Designer.vb">
+      <DependentUpon>frmMain.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmMain.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmMDV.Designer.vb">
+      <DependentUpon>frmMDV.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmMDV.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmPubNPriKeyGenerator.Designer.vb">
+      <DependentUpon>frmPubNPriKeyGenerator.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmPubNPriKeyGenerator.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmreturnReason.Designer.vb">
+      <DependentUpon>frmreturnReason.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmreturnReason.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmTheirAccountID.Designer.vb">
+      <DependentUpon>frmTheirAccountID.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmTheirAccountID.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmViewDDMandateImage.Designer.vb">
+      <DependentUpon>frmViewDDMandateImage.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\frmViewDDMandateImage.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\InwardImageImportation.Designer.vb">
+      <DependentUpon>InwardImageImportation.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\InwardImageImportation.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Modules\BRISO20022Cancellation.vb" />
+    <Compile Include="Modules\BRISO20022CT812.vb" />
+    <Compile Include="Modules\BRISO20022CT816.vb" />
+    <Compile Include="Modules\BRISO20022DD312.vb" />
+    <Compile Include="Modules\BRISO20022DD316.vb" />
+    <Compile Include="Modules\BRISO20022DD416.vb" />
+    <Compile Include="Modules\BRISO20022PR716.vb" />
+    <Compile Include="Modules\BRISO20022PS213.vb" />
+    <Compile Include="Modules\BRISO20022PS217.vb" />
+    <Compile Include="Modules\BRISO20022PC412.vb" />
+    <Compile Include="Modules\BRISO20022Response.vb" />
+    <Compile Include="Modules\ETFiles.vb" />
+    <Compile Include="Modules\ISOFilesUG.vb" />
+    <Compile Include="Modules\LoggerConfiguration.vb" />
+    <Compile Include="Modules\MonSig.vb" />
+    <Compile Include="Modules\DatatbltoRecordset.vb" />
+    <Compile Include="Modules\ISOFiles.vb" />
+    <Compile Include="Modules\Modscan.vb" />
+    <Compile Include="Modules\Montran.vb" />
+    <Compile Include="Modules\ETHFiles.vb" />
+     <Compile Include="Modules\TanzaniaFiles.vb" />
+    <Compile Include="Modules\GenerationTypes.vb" />
+    <Compile Include="Modules\UGFiles.vb" />
+    <Compile Include="My Project\AssemblyInfo.vb" />
+    <Compile Include="My Project\Application.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Application.myapp</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Resources.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Resources1.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="My Project\Settings.Designer.vb">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="Web References\WebService\Reference.vb">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Reference.map</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Forms\FrmBROutFile.resx">
+      <DependentUpon>FrmBROutFile.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmIncoming.resx">
+      <DependentUpon>frmIncoming.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmMDVET.resx">
+      <DependentUpon>frmMDVET.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmMDVTZ.resx">
+      <DependentUpon>frmMDVTZ.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmMDVUG.resx">
+      <DependentUpon>frmMDVUG.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmEncryptEFT.resx">
+      <DependentUpon>frmEncryptEFT.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmBRChequesSearchClearing.resx">
+      <DependentUpon>frmBRChequesSearchClearing.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmBRImageNSignatureView.resx">
+      <DependentUpon>frmBRImageNSignatureView.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmMain.resx">
+      <DependentUpon>frmMain.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmMDV.resx">
+      <DependentUpon>frmMDV.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmPubNPriKeyGenerator.resx">
+      <DependentUpon>frmPubNPriKeyGenerator.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmreturnReason.resx">
+      <DependentUpon>frmreturnReason.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmTheirAccountID.resx">
+      <DependentUpon>frmTheirAccountID.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmViewDDMandateImage.resx">
+      <DependentUpon>frmViewDDMandateImage.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\InwardImageImportation.resx">
+      <DependentUpon>InwardImageImportation.vb</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="My Project\Resources.resx">
+      <Generator>VbMyResourcesResXFileCodeGenerator</Generator>
+      <CustomToolNamespace>My.Resources</CustomToolNamespace>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources1.Designer.vb</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="ClassDiagram1.cd" />
+    <None Include="ClassDiagram2.cd" />
+    <None Include="My Project\Application.myapp">
+      <Generator>MyApplicationCodeGenerator</Generator>
+      <LastGenOutput>Application.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="My Project\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <CustomToolNamespace>My</CustomToolNamespace>
+      <LastGenOutput>Settings.Designer.vb</LastGenOutput>
+    </None>
+    <None Include="Web References\WebService\IEService.wsdl" />
+    <None Include="Web References\WebService\Reference.map">
+      <Generator>MSDiscoCodeGenerator</Generator>
+      <LastGenOutput>Reference.vb</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Forms\bin\Debug\log_img6.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WebReferences Include="Web References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <WebReferenceUrl Include="http://192.168.101.18:4200/GatewayService/IEService.asmx">
+      <UrlBehavior>Dynamic</UrlBehavior>
+      <RelPath>Web References\WebService\</RelPath>
+      <UpdateFromURL>http://192.168.101.18:4200/GatewayService/IEService.asmx</UpdateFromURL>
+      <ServiceLocationURL>
+      </ServiceLocationURL>
+      <CachedDynamicPropName>
+      </CachedDynamicPropName>
+      <CachedAppSettingsObjectName>MySettings</CachedAppSettingsObjectName>
+      <CachedSettingsPropName>BrClearing_WebService_IEService</CachedSettingsPropName>
+    </WebReferenceUrl>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Web References\WebService\IEService.disco" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Modules\XMLFile1.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BRClearing\BRClearing.csproj">
+      <Project>{c97272cd-309a-4122-adb7-506ad052b013}</Project>
+      <Name>BRClearing</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BRClrAlDigiSign\BRClrAlDigiSign.csproj">
+      <Project>{8a78dfa2-3d11-4dd8-8546-52183e7f77ff}</Project>
+      <Name>BRClrAlDigiSign</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
