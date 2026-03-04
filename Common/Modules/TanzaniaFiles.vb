@@ -608,7 +608,8 @@ Namespace TZ
                                                     Case "BRMFO"
                                                         strAction = "UPDATE t_TransactionMICR SET IsGenerated = 1, Reference = '" & msgId & "', ExtraDetails = '" & c.Codeline & "',  MicrLine ='" & c.Codeline & "' WHERE ColumnID = '" & c.RemittanceInfo & "'"
                                                     Case "BRNET"
-                                                        strAction = "UPDATE t_TrxClearing SET IsGenerated = 1, SessNo='1' ,Reference = '" & msgId & "' WHERE TrxRowID = '" & c.trxID & "' AND ReturnCodeID = '00'"
+                                                        strAction = "UPDATE t_TrxClearing SET IsGenerated = 1, SessNo='1' ,Reference = '" & msgId & "' WHERE TrxRowID = '" & c.trxID & "' AND ReturnCodeID = '00'; " &
+                                                                    "UPDATE t_AccountTrxClearing SET IsGenerated = 1, SessNo='1' ,Reference = '" & msgId & "' WHERE TrxRowID = '" & c.trxID & "' AND ReturnCodeID = '00'"
                                                         'Modscan.ExecuteData(Modscan.GetModify("p_UpdateGeneratedClearingTrx", "TrxRowID", c.trxID, "SessNo", "2", "Reference", msgId, "ReadDate", Modscan.cToDate, "FromDate", Modscan.cFromDate), Modscan.publicDTbl, Modscan.dataExecTypes.ExecTypeQuery, Modscan.queryType.SelectStatement, Modscan.publicDset)
                                                     Case "BRNETOLD"
                                                         strAction = "UPDATE t_TrxClearing SET IsGenerated = 1, SessNo='1' ,Reference = '" & msgId & "' WHERE TrxRowID = '" & c.RemittanceInfo & "'"
@@ -777,7 +778,8 @@ Namespace TZ
                                                     Case "BRMFO"
                                                         strAction = "UPDATE t_TransactionMICR SET IsGenerated = 1, Reference = '" & msgId & "' , RejectedReason = '" & s.RetCode & "' ,  MicrLine ='" & s.Codeline & "' AND ReturnCode <>'00' WHERE ColumnID = '" & s.RemittanceInfo & "'"
                                                     Case "BRNET"
-                                                        strAction = "UPDATE t_TrxClearing SET IsGenerated = 1, SessNo='1' ,Reference = '" & msgId & "'  WHERE TrxRowID = '" & s.trxID & "' AND  ReturnCodeID <>'00'"
+                                                        strAction = "UPDATE t_TrxClearing SET IsGenerated = 1, SessNo='1' ,Reference = '" & msgId & "'  WHERE TrxRowID = '" & s.trxID & "' AND  ReturnCodeID <>'00'; " &
+                                                                    "UPDATE t_AccountTrxClearing SET IsGenerated = 1, SessNo='1' ,Reference = '" & msgId & "'  WHERE TrxRowID = '" & s.trxID & "' AND  ReturnCodeID <>'00'"
                                                         'Modscan.ExecuteData(Modscan.GetModify("p_UpdateGeneratedClearingTrx", "TrxRowID", s.trxID, "SessNo", "2", "Reference", msgId, "ReadDate", Modscan.cToDate, "FromDate", Modscan.cFromDate), Modscan.publicDTbl, Modscan.dataExecTypes.ExecTypeQuery, Modscan.queryType.SelectStatement, Modscan.publicDset)
                                                     Case "BRNETOLD"
                                                         strAction = "UPDATE t_TrxClearing SET IsGenerated = 1, SessNo='1' ,Reference = '" & msgId & "' ReturnCodeID <>'00'  WHERE TrxRowID = '" & s.MsgId & "'  AND  ReturnCodeID <>'00'"
@@ -902,7 +904,8 @@ Namespace TZ
                                         Case "BRMFO"
                                             strAction = "UPDATE t_TransactionMICR SET IsGenerated = 1, Reference = '" & msgId & "' WHERE ColumnID = '" & d.EFTID & "' AND TrxType ='0' AND VoucherCode <> '40'  AND BankID = '" & BankArr.Item(k) & "'"
                                         Case "BRNET"
-                                            strAction = "UPDATE t_TrxClearing SET IsGenerated = 1, SessNo='1' ,Reference = '" & msgId & "' WHERE TrxRowID = '" & d.EFTID & "' AND TrxType ='OD' AND ReturnCodeID = '00' AND  VoucherCode <> '40'"  'AND BankID = '" & BankArr.Item(k) & "'"
+                                            strAction = "UPDATE t_TrxClearing SET IsGenerated = 1, SessNo='1' ,Reference = '" & msgId & "' WHERE TrxRowID = '" & d.EFTID & "' AND TrxType ='OD' AND ReturnCodeID = '00' AND  VoucherCode <> '40'; " &
+                                                        "UPDATE t_AccountTrxClearing SET IsGenerated = 1, SessNo='1' ,Reference = '" & msgId & "' WHERE TrxRowID = '" & d.EFTID & "' AND TrxType ='OD' AND ReturnCodeID = '00' AND  VoucherCode <> '40'"  'AND BankID = '" & BankArr.Item(k) & "'"
                                             'Modscan.ExecuteData(Modscan.GetModify("p_UpdateGeneratedClearingTrx", "TrxRowID", d.TrxId, "SessNo", "2", "Reference", msgId, "ReadDate", Modscan.cToDate, "FromDate", Modscan.cFromDate), Modscan.publicDTbl, Modscan.dataExecTypes.ExecTypeQuery, Modscan.queryType.SelectStatement, Modscan.publicDset)
                                         Case "BRNETOLD"
                                             strAction = "UPDATE t_TrxClearing SET IsGenerated = 1, SessNo='1' ,Reference = '" & msgId & "' WHERE TrxRowID = '" & d.EFTID & "' AND TrxType ='OD' AND VoucherCode <> '40'  AND BankID = '" & BankArr.Item(k) & "'"
@@ -1040,7 +1043,8 @@ Namespace TZ
                                             Case "BRMFO"
                                                 strAction = "UPDATE t_TransactionMICR SET IsGenerated = 1, Remarks = '" & msgId & "' WHERE ColumnID = '" & d.TrxId & "' AND TrxType ='0' AND VoucherCode <> '40' AND BankID = '" & BankArr.Item(k) & "'"
                                             Case "BRNET"
-                                                strAction = "UPDATE t_trxClearing SET IsGenerated = 1, SessNo='2' ,Reference = '" & msgId & "' WHERE TrxRowID = '" & d.TrxId & "' AND TrxType ='OD' AND ReturnCodeID <> '00' AND VoucherCode <> '40'  AND isNull(IsGenerated,0) = 0 " 'AND BankID = '" & BankArr.Item(k) & "'"
+                                                strAction = "UPDATE t_trxClearing SET IsGenerated = 1, SessNo='2' ,Reference = '" & msgId & "' WHERE TrxRowID = '" & d.TrxId & "' AND TrxType ='OD' AND ReturnCodeID <> '00' AND VoucherCode <> '40'  AND isNull(IsGenerated,0) = 0; " &
+                                                            "UPDATE t_AccountTrxClearing SET IsGenerated = 1, SessNo='2' ,Reference = '" & msgId & "' WHERE TrxRowID = '" & d.TrxId & "' AND TrxType ='OD' AND ReturnCodeID <> '00' AND VoucherCode <> '40'  AND isNull(IsGenerated,0) = 0"
                                                 'If Not Modscan.ExecuteData(Modscan.GetModify("p_UpdateGeneratedClearingTrx", "TrxRowID", d.TrxId, "SessNo", "2", "Reference", msgId, "ReadDate", Modscan.cToDate, "FromDate", Modscan.cFromDate), Modscan.publicDTbl, Modscan.dataExecTypes.ExecTypeQuery, Modscan.queryType.SelectStatement, Modscan.publicDset) Then
                                                 '    result.AddError("Failed to update status for TrxID " & d.TrxId & ": " & Modscan.LastErrorMessage)
                                                 'End If

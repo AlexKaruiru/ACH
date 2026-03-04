@@ -12,7 +12,7 @@ IF @Bic ='ALL'
 BEGIN  
  SELECT @Bic = NULL  
 END  
-  
+
 SELECT @File =   
  CASE WHEN @FileType = 'POC' THEN 'OC'  
   WHEN @FileType = 'ROC' THEN 'OC'  
@@ -27,136 +27,153 @@ UPDATE t_TrxClearing
 SET ReturnCodeID = '00'  
 WHERE ReturnCodeID = '00 -'  
   
--- For Outward Debits (EFTs) - use DrawerOrPayee as the customer name
+-- For POC and POD (Outward Credits and Debits)
 IF @FileType IN ('POC', 'POD')  
 BEGIN  
  SELECT 
     OurBranchID, 
-    -- Use the actual customer account if available, otherwise use the GL account
-    ISNULL(DrawerOrPayeeAccountID, AccountID) AS AccountID,
-    -- Use the actual customer name if available, otherwise fall back to GL name
-    ISNULL(DrawerOrPayee, dbo.f_GetAccountName(OurBranchID, AccountID)) AS CName,   
-    Amount, 
+    AccountID, 
+    dbo.f_GetAccountName(OurBranchID, AccountID) as CName,   
+    ABS(Amount) as Amount,  -- Use ABS for positive amounts
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
     TrxRowID,
-    dbo.f_GetClearingSwiftIDFromBankID(BankId) BankID,   
-    CASE WHEN IsNull(IsGenerated,0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END TrxStatus,    
-    CASE WHEN IsNull(IsGenerated,0) = 0 THEN 'File Not Created'  
-    ELSE IsNull(Remarks,'File Created') END Remarks   
- FROM t_TrxClearing (NOLOCK)  
- WHERE TrxType = @File AND ReturnCodeID = '00' AND IsNull(IsDeleted,0) = 0  
- AND IsNull(IsGenerated,0) = 0  AND VoucherCode <> '40'  
- AND BankID = IsNull(dbo.f_GetClearingSwiftIDFromBankID(@Bic),BankID)
+    dbo.f_GetClearingSwiftIDFromBankID(BankId) as BankID,   
+    CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
+    CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
+    ELSE IsNull(Remarks, 'File Created') END as Remarks   
+ FROM v_Clearing WITH (NOLOCK)  -- CHANGED: Using view instead of table
+ WHERE TrxTypeID = @File         -- CHANGED: Using TrxTypeID instead of TrxType
+    AND ReturnCodeID = '00' 
+    AND IsNull(IsDeleted, 0) = 0  
+    AND IsNull(IsGenerated, 0) = 0  
+    AND VoucherCode <> '40'  
+    AND BankID = IsNull(dbo.f_GetClearingSwiftIDFromBankID(@Bic), BankID)
 END  
 
--- For Demand Drafts
+-- For Paid Demand Drafts (PDOD)
 IF @FileType IN ('PDOD')  
 BEGIN  
  SELECT 
     OurBranchID, 
-    ISNULL(DrawerOrPayeeAccountID, AccountID) AS AccountID,
-    ISNULL(DrawerOrPayee, dbo.f_GetAccountName(OurBranchID, AccountID)) AS CName,   
-    Amount, 
+    AccountID, 
+    dbo.f_GetAccountName(OurBranchID, AccountID) as CName,   
+    ABS(Amount) as Amount,
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
     TrxRowID,
-    dbo.f_GetClearingSwiftIDFromBankID(BankId) BankID,   
-    CASE WHEN IsNull(IsGenerated,0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END TrxStatus,    
-    CASE WHEN IsNull(IsGenerated,0) = 0 THEN 'File Not Created'  
-    ELSE IsNull(Remarks,'File Created') END Remarks   
- FROM t_TrxClearing (NOLOCK)  
- WHERE TrxType = @File AND ReturnCodeID = '00' AND IsNull(IsDeleted,0) = 0  
- AND IsNull(IsGenerated,0) = 0  AND VoucherCode = '40'  
- AND BankID = IsNull(dbo.f_GetClearingSwiftIDFromBankID(@Bic),BankID)
+    dbo.f_GetClearingSwiftIDFromBankID(BankId) as BankID,   
+    CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
+    CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
+    ELSE IsNull(Remarks, 'File Created') END as Remarks   
+ FROM v_Clearing WITH (NOLOCK)  -- CHANGED: Using view
+ WHERE TrxTypeID = @File         -- CHANGED: Using TrxTypeID
+    AND ReturnCodeID = '00' 
+    AND IsNull(IsDeleted, 0) = 0  
+    AND IsNull(IsGenerated, 0) = 0  
+    AND VoucherCode = '40'  
+    AND BankID = IsNull(dbo.f_GetClearingSwiftIDFromBankID(@Bic), BankID)
 END  
   
--- For Returned Outward Debits
+-- For Returned Outward Debits (ROD)
 IF @FileType IN ('ROD')  
 BEGIN  
  SELECT 
     OurBranchID, 
-    ISNULL(DrawerOrPayeeAccountID, AccountID) AS AccountID,
-    ISNULL(DrawerOrPayee, dbo.f_GetAccountName(OurBranchID, AccountID)) AS CName,   
-    Amount, 
+    AccountID, 
+    dbo.f_GetAccountName(OurBranchID, AccountID) as CName,   
+    ABS(Amount) as Amount,
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
     TrxRowID,
-    dbo.f_GetClearingSwiftIDFromBankID(BankId) BankID,   
-    CASE WHEN IsNull(IsGenerated,0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END TrxStatus,    
-    CASE WHEN IsNull(IsGenerated,0) = 0 THEN 'File Not Created'  
-    ELSE IsNull(Remarks,'File Created') END Remarks  
- FROM t_TrxClearing (NOLOCK)  
- WHERE TrxType = @File AND ReturnCodeID <> '00' AND IsNull(IsDeleted,0) = 0  
- AND IsNull(IsGenerated,0) = 0 AND IsNull(ChequeID,'') <> ''  
- AND BankID = IsNull(@Bic,BankID) AND TrxType IN ('OC')  
- AND VoucherCode NOT IN ('40','58','59')  
+    dbo.f_GetClearingSwiftIDFromBankID(BankId) as BankID,   
+    CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
+    CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
+    ELSE IsNull(Remarks, 'File Created') END as Remarks  
+ FROM v_Clearing WITH (NOLOCK)  -- CHANGED: Using view
+ WHERE TrxTypeID = @File         -- CHANGED: Using TrxTypeID
+    AND ReturnCodeID <> '00' 
+    AND IsNull(IsDeleted, 0) = 0  
+    AND IsNull(IsGenerated, 0) = 0  
+    AND IsNull(ChequeID, '') <> ''  
+    AND BankID = IsNull(@Bic, BankID) 
+    AND TrxTypeID IN ('OC')  
+    AND VoucherCode NOT IN ('40', '58', '59')  
 END  
 
--- For Returned Demand Drafts
+-- For Returned Demand Drafts (RDOD)
 IF @FileType IN ('RDOD')  
 BEGIN  
  SELECT 
     OurBranchID, 
-    ISNULL(DrawerOrPayeeAccountID, AccountID) AS AccountID,
-    ISNULL(DrawerOrPayee, dbo.f_GetAccountName(OurBranchID, AccountID)) AS CName,   
-    Amount, 
+    AccountID, 
+    dbo.f_GetAccountName(OurBranchID, AccountID) as CName,   
+    ABS(Amount) as Amount,
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
     TrxRowID,
-    dbo.f_GetClearingSwiftIDFromBankID(BankId) BankID,   
-    CASE WHEN IsNull(IsGenerated,0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END TrxStatus,    
-    CASE WHEN IsNull(IsGenerated,0) = 0 THEN 'File Not Created'  
-    ELSE IsNull(Remarks,'File Created') END Remarks  
- FROM t_TrxClearing (NOLOCK)  
- WHERE TrxType = @File AND ReturnCodeID <> '00' AND IsNull(IsDeleted,0) = 0  
- AND IsNull(IsGenerated,0) = 0   
- AND VoucherCode = '40'  
- AND BankID = IsNull(@Bic,BankID) AND TrxType IN ('OC')  
+    dbo.f_GetClearingSwiftIDFromBankID(BankId) as BankID,   
+    CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
+    CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
+    ELSE IsNull(Remarks, 'File Created') END as Remarks  
+ FROM v_Clearing WITH (NOLOCK)  -- CHANGED: Using view
+ WHERE TrxTypeID = @File         -- CHANGED: Using TrxTypeID
+    AND ReturnCodeID <> '00' 
+    AND IsNull(IsDeleted, 0) = 0  
+    AND IsNull(IsGenerated, 0) = 0   
+    AND VoucherCode = '40'  
+    AND BankID = IsNull(@Bic, BankID) 
+    AND TrxTypeID IN ('OC')  
 END  
   
--- For Returned Outward Credits (Cheques)
+-- For Returned Outward Credits (ROC)
 IF @FileType IN ('ROC')  
 BEGIN  
  SELECT 
     OurBranchID, 
-    ISNULL(DrawerOrPayeeAccountID, AccountID) AS AccountID,
-    ISNULL(DrawerOrPayee, dbo.f_GetAccountName(OurBranchID, AccountID)) AS CName,   
-    Amount, 
+    AccountID, 
+    dbo.f_GetAccountName(OurBranchID, AccountID) as CName,   
+    ABS(Amount) as Amount,
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
     TrxRowID,
-    dbo.f_GetClearingSwiftIDFromBankID(BankId) BankID,   
-    CASE WHEN IsNull(IsGenerated,0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END TrxStatus,    
-    CASE WHEN IsNull(IsGenerated,0) = 0 THEN 'File Not Created'  
-    ELSE IsNull(Remarks,'File Created') END Remarks  
- FROM t_TrxClearing (NOLOCK)  
- WHERE TrxType = @File AND ReturnCodeID <> '00' AND IsNull(IsDeleted,0) = 0  
- AND IsNull(IsGenerated,0) = 0   
- AND BankID = IsNull(@Bic,BankID) AND TrxType IN ('OC')  
- AND IsNull(chequeid,0) <> 0   
- AND VoucherCode <> '40'  
+    dbo.f_GetClearingSwiftIDFromBankID(BankId) as BankID,   
+    CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
+    CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
+    ELSE IsNull(Remarks, 'File Created') END as Remarks  
+ FROM v_Clearing WITH (NOLOCK)  -- CHANGED: Using view
+ WHERE TrxTypeID = @File         -- CHANGED: Using TrxTypeID
+    AND ReturnCodeID <> '00' 
+    AND IsNull(IsDeleted, 0) = 0  
+    AND IsNull(IsGenerated, 0) = 0   
+    AND BankID = IsNull(@Bic, BankID) 
+    AND TrxTypeID IN ('OC')  
+    AND IsNull(chequeid, 0) <> 0   
+    AND VoucherCode <> '40'  
 END  
 
--- For Returned EFTs/Credits
+-- For Returned Credits/EFTs (RCT)
 IF @FileType IN ('RCT')  
 BEGIN  
  SELECT 
     OurBranchID, 
-    ISNULL(DrawerOrPayeeAccountID, AccountID) AS AccountID,
-    ISNULL(DrawerOrPayee, dbo.f_GetAccountName(OurBranchID, AccountID)) AS CName,   
-    Amount, 
+    AccountID, 
+    dbo.f_GetAccountName(OurBranchID, AccountID) as CName,   
+    ABS(Amount) as Amount,
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
     TrxRowID,
-    dbo.f_GetClearingSwiftIDFromBankID(BankId) BankID,   
-    CASE WHEN IsNull(IsGenerated,0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END TrxStatus,    
-    CASE WHEN IsNull(IsGenerated,0) = 0 THEN 'File Not Created'  
-    ELSE IsNull(Remarks,'File Created') END Remarks  
- FROM t_TrxClearing (NOLOCK)  
- WHERE TrxType = @File AND ReturnCodeID <> '00' AND IsNull(IsDeleted,0) = 0  
- AND IsNull(IsGenerated,0) = 0   
- AND IsNull(chequeid,0) = 0   
- AND BankID = IsNull(@Bic,BankID) AND TrxType IN ('OD')  
- AND VoucherCode <> '40'  
+    dbo.f_GetClearingSwiftIDFromBankID(BankId) as BankID,   
+    CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
+    CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
+    ELSE IsNull(Remarks, 'File Created') END as Remarks  
+ FROM v_Clearing WITH (NOLOCK)  -- CHANGED: Using view
+ WHERE TrxTypeID = @File         -- CHANGED: Using TrxTypeID
+    AND ReturnCodeID <> '00' 
+    AND IsNull(IsDeleted, 0) = 0  
+    AND IsNull(IsGenerated, 0) = 0   
+    AND IsNull(chequeid, 0) = 0   
+    AND BankID = IsNull(@Bic, BankID) 
+    AND TrxTypeID IN ('OD')  
+    AND VoucherCode <> '40'  
 END
