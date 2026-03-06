@@ -34,7 +34,7 @@ BEGIN
     OurBranchID, 
     ISNULL(Orig.OriginatorAccount, AccountID) as AccountID, 
     ISNULL(Orig.OriginatorName, dbo.f_GetAccountName(OurBranchID, AccountID)) as CName,   
-    ABS(Amount) as Amount,  -- Use ABS for positive amounts
+    ABS(Amount) as Amount,  
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
     TrxRowID,
@@ -42,9 +42,9 @@ BEGIN
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
     ELSE IsNull(Remarks, 'File Created') END as Remarks   
- FROM v_Clearing WITH (NOLOCK)
- OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, TrxDate) as Orig
- WHERE TrxTypeID = @File
+ FROM t_TrxClearing WITH (NOLOCK)
+ OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, [Date]) as Orig
+ WHERE TrxType = @File
     AND ReturnCodeID = '00' 
     AND IsNull(IsDeleted, 0) = 0  
     AND IsNull(IsGenerated, 0) = 0  
@@ -67,9 +67,9 @@ BEGIN
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
     ELSE IsNull(Remarks, 'File Created') END as Remarks   
- FROM v_Clearing WITH (NOLOCK)
- OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, TrxDate) as Orig
- WHERE TrxTypeID = @File 
+ FROM t_TrxClearing WITH (NOLOCK)
+ OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, [Date]) as Orig
+ WHERE TrxType = @File 
     AND ReturnCodeID = '00' 
     AND IsNull(IsDeleted, 0) = 0  
     AND IsNull(IsGenerated, 0) = 0  
@@ -92,15 +92,15 @@ BEGIN
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
     ELSE IsNull(Remarks, 'File Created') END as Remarks  
- FROM v_Clearing WITH (NOLOCK)
- OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, TrxDate) as Orig
- WHERE TrxTypeID = @File 
+ FROM t_TrxClearing WITH (NOLOCK)
+ OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, [Date]) as Orig
+ WHERE TrxType = @File 
     AND ReturnCodeID <> '00' 
     AND IsNull(IsDeleted, 0) = 0  
     AND IsNull(IsGenerated, 0) = 0  
     AND IsNull(ChequeID, '') <> ''  
     AND BankID = IsNull(@Bic, BankID) 
-    AND TrxTypeID IN ('OC')  
+    AND TrxType IN ('OC')  
     AND VoucherCode NOT IN ('40', '58', '59')  
 END  
 
@@ -119,15 +119,15 @@ BEGIN
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
     ELSE IsNull(Remarks, 'File Created') END as Remarks  
- FROM v_Clearing WITH (NOLOCK)
- OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, TrxDate) as Orig
- WHERE TrxTypeID = @File 
+ FROM t_TrxClearing WITH (NOLOCK)
+ OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, [Date]) as Orig
+ WHERE TrxType = @File 
     AND ReturnCodeID <> '00' 
     AND IsNull(IsDeleted, 0) = 0  
     AND IsNull(IsGenerated, 0) = 0   
     AND VoucherCode = '40'  
     AND BankID = IsNull(@Bic, BankID) 
-    AND TrxTypeID IN ('OC')  
+    AND TrxType IN ('OC')  
 END  
   
 -- For Returned Outward Credits (ROC)
@@ -145,14 +145,14 @@ BEGIN
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
     ELSE IsNull(Remarks, 'File Created') END as Remarks  
- FROM v_Clearing WITH (NOLOCK)
- OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, TrxDate) as Orig
- WHERE TrxTypeID = @File 
+ FROM t_TrxClearing WITH (NOLOCK)
+ OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, [Date]) as Orig
+ WHERE TrxType = @File 
     AND ReturnCodeID <> '00' 
     AND IsNull(IsDeleted, 0) = 0  
     AND IsNull(IsGenerated, 0) = 0   
     AND BankID = IsNull(@Bic, BankID) 
-    AND TrxTypeID IN ('OC')  
+    AND TrxType IN ('OC')  
     AND IsNull(chequeid, 0) <> 0   
     AND VoucherCode <> '40'  
 END  
@@ -162,8 +162,8 @@ IF @FileType IN ('RCT')
 BEGIN  
  SELECT 
     OurBranchID, 
-    AccountID, 
-    dbo.f_GetAccountName(OurBranchID, AccountID) as CName,   
+    ISNULL(Orig.OriginatorAccount, AccountID) as AccountID, 
+    ISNULL(Orig.OriginatorName, dbo.f_GetAccountName(OurBranchID, AccountID)) as CName,   
     ABS(Amount) as Amount,
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
@@ -172,13 +172,15 @@ BEGIN
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
     ELSE IsNull(Remarks, 'File Created') END as Remarks  
- FROM v_Clearing WITH (NOLOCK)  -- CHANGED: Using view
- WHERE TrxTypeID = @File         -- CHANGED: Using TrxTypeID
+ FROM t_TrxClearing WITH (NOLOCK)
+ OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, [Date]) as Orig
+ WHERE TrxType = @File 
     AND ReturnCodeID <> '00' 
     AND IsNull(IsDeleted, 0) = 0  
     AND IsNull(IsGenerated, 0) = 0   
     AND IsNull(chequeid, 0) = 0   
     AND BankID = IsNull(@Bic, BankID) 
-    AND TrxTypeID IN ('OD')  
+    AND TrxType IN ('OD')  
     AND VoucherCode <> '40'  
 END
+GO
