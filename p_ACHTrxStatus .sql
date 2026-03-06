@@ -32,8 +32,8 @@ IF @FileType IN ('POC', 'POD')
 BEGIN  
  SELECT 
     OurBranchID, 
-    AccountID, 
-    dbo.f_GetAccountName(OurBranchID, AccountID) as CName,   
+    ISNULL(Orig.OriginatorAccount, AccountID) as AccountID, 
+    ISNULL(Orig.OriginatorName, dbo.f_GetAccountName(OurBranchID, AccountID)) as CName,   
     ABS(Amount) as Amount,  -- Use ABS for positive amounts
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
@@ -42,8 +42,9 @@ BEGIN
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
     ELSE IsNull(Remarks, 'File Created') END as Remarks   
- FROM v_Clearing WITH (NOLOCK)  -- CHANGED: Using view instead of table
- WHERE TrxTypeID = @File         -- CHANGED: Using TrxTypeID instead of TrxType
+ FROM v_Clearing WITH (NOLOCK)
+ OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, TrxDate) as Orig
+ WHERE TrxTypeID = @File
     AND ReturnCodeID = '00' 
     AND IsNull(IsDeleted, 0) = 0  
     AND IsNull(IsGenerated, 0) = 0  
@@ -56,8 +57,8 @@ IF @FileType IN ('PDOD')
 BEGIN  
  SELECT 
     OurBranchID, 
-    AccountID, 
-    dbo.f_GetAccountName(OurBranchID, AccountID) as CName,   
+    ISNULL(Orig.OriginatorAccount, AccountID) as AccountID, 
+    ISNULL(Orig.OriginatorName, dbo.f_GetAccountName(OurBranchID, AccountID)) as CName,   
     ABS(Amount) as Amount,
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
@@ -66,8 +67,9 @@ BEGIN
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
     ELSE IsNull(Remarks, 'File Created') END as Remarks   
- FROM v_Clearing WITH (NOLOCK)  -- CHANGED: Using view
- WHERE TrxTypeID = @File         -- CHANGED: Using TrxTypeID
+ FROM v_Clearing WITH (NOLOCK)
+ OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, TrxDate) as Orig
+ WHERE TrxTypeID = @File 
     AND ReturnCodeID = '00' 
     AND IsNull(IsDeleted, 0) = 0  
     AND IsNull(IsGenerated, 0) = 0  
@@ -80,8 +82,8 @@ IF @FileType IN ('ROD')
 BEGIN  
  SELECT 
     OurBranchID, 
-    AccountID, 
-    dbo.f_GetAccountName(OurBranchID, AccountID) as CName,   
+    ISNULL(Orig.OriginatorAccount, AccountID) as AccountID, 
+    ISNULL(Orig.OriginatorName, dbo.f_GetAccountName(OurBranchID, AccountID)) as CName,   
     ABS(Amount) as Amount,
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
@@ -90,8 +92,9 @@ BEGIN
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
     ELSE IsNull(Remarks, 'File Created') END as Remarks  
- FROM v_Clearing WITH (NOLOCK)  -- CHANGED: Using view
- WHERE TrxTypeID = @File         -- CHANGED: Using TrxTypeID
+ FROM v_Clearing WITH (NOLOCK)
+ OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, TrxDate) as Orig
+ WHERE TrxTypeID = @File 
     AND ReturnCodeID <> '00' 
     AND IsNull(IsDeleted, 0) = 0  
     AND IsNull(IsGenerated, 0) = 0  
@@ -106,8 +109,8 @@ IF @FileType IN ('RDOD')
 BEGIN  
  SELECT 
     OurBranchID, 
-    AccountID, 
-    dbo.f_GetAccountName(OurBranchID, AccountID) as CName,   
+    ISNULL(Orig.OriginatorAccount, AccountID) as AccountID, 
+    ISNULL(Orig.OriginatorName, dbo.f_GetAccountName(OurBranchID, AccountID)) as CName,   
     ABS(Amount) as Amount,
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
@@ -116,8 +119,9 @@ BEGIN
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
     ELSE IsNull(Remarks, 'File Created') END as Remarks  
- FROM v_Clearing WITH (NOLOCK)  -- CHANGED: Using view
- WHERE TrxTypeID = @File         -- CHANGED: Using TrxTypeID
+ FROM v_Clearing WITH (NOLOCK)
+ OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, TrxDate) as Orig
+ WHERE TrxTypeID = @File 
     AND ReturnCodeID <> '00' 
     AND IsNull(IsDeleted, 0) = 0  
     AND IsNull(IsGenerated, 0) = 0   
@@ -131,8 +135,8 @@ IF @FileType IN ('ROC')
 BEGIN  
  SELECT 
     OurBranchID, 
-    AccountID, 
-    dbo.f_GetAccountName(OurBranchID, AccountID) as CName,   
+    ISNULL(Orig.OriginatorAccount, AccountID) as AccountID, 
+    ISNULL(Orig.OriginatorName, dbo.f_GetAccountName(OurBranchID, AccountID)) as CName,   
     ABS(Amount) as Amount,
     DrawerOrPayeeAccountID, 
     DrawerOrPayee, 
@@ -141,8 +145,9 @@ BEGIN
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN '' ELSE IsNull(TrxStatus, 'Awaiting response') END as TrxStatus,    
     CASE WHEN IsNull(IsGenerated, 0) = 0 THEN 'File Not Created'  
     ELSE IsNull(Remarks, 'File Created') END as Remarks  
- FROM v_Clearing WITH (NOLOCK)  -- CHANGED: Using view
- WHERE TrxTypeID = @File         -- CHANGED: Using TrxTypeID
+ FROM v_Clearing WITH (NOLOCK)
+ OUTER APPLY dbo.f_GetOriginatorDetails(TrxBatchID, TrxDate) as Orig
+ WHERE TrxTypeID = @File 
     AND ReturnCodeID <> '00' 
     AND IsNull(IsDeleted, 0) = 0  
     AND IsNull(IsGenerated, 0) = 0   

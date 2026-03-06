@@ -1,0 +1,27 @@
+BankID	BankID	no	12	     	     	no	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+AccountID	AccountID	no	40	     	     	no	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+Description	Description	no	510	     	     	no	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+ShortName	ShortNames	no	40	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+CurrencyID	CurrencyID	no	6	     	     	no	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+GLAccountTypeID	SystemSubID	no	50	     	     	no	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+GLSubAccountTypeID	nvarchar	no	12	     	     	no	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+GLCategoryID	SystemSubID	no	50	     	     	no	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+PostingTypeID	SystemSubID	no	50	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+GLClassID	nvarchar	no	20	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+ContraAccountID	AccountID	no	40	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+MainGLAccountID	AccountID	no	40	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+IsRevaluate	bit	no	1	     	     	no	(n/a)	(n/a)	NULL
+Remarks	Remarks	no	510	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+ClosedBy	OperatorID	no	50	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+ClosedDate	smalldatetime	no	4	     	     	yes	(n/a)	(n/a)	NULL
+ClosedReason	Remarks	no	510	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+CreatedBy	OperatorID	no	50	     	     	no	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+CreatedOn	smalldatetime	no	4	     	     	no	(n/a)	(n/a)	NULL
+ModifiedBy	OperatorID	no	50	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+ModifiedOn	smalldatetime	no	4	     	     	yes	(n/a)	(n/a)	NULL
+SupervisedBy	OperatorID	no	50	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+SupervisedOn	smalldatetime	no	4	     	     	yes	(n/a)	(n/a)	NULL
+UpdateCount	tinyint	no	1	3    	0    	no	(n/a)	(n/a)	NULL
+GLTypeGroupID	nvarchar	no	50	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
+Digit	varbinary	no	50	     	     	yes	no	yes	NULL
+LegacyGLAccountID	nvarchar	no	200	     	     	yes	(n/a)	(n/a)	SQL_Latin1_General_CP1_CI_AS
