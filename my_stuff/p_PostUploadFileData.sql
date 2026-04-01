@@ -1,5 +1,5 @@
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------  
-CREATE      PROCEDURE [dbo].[p_PostUploadFileData] (  
+ALTER  PROCEDURE [dbo].[p_PostUploadFileData] (  
  @OurBranchID BranchID  
  ,@Narration VARCHAR(200)  
  ,@FormatID VARCHAR(10)  
@@ -2306,6 +2306,8 @@ BEGIN
    ,@CreditAccountID dbo.AccountID  
    ,@BeneficiaryName VARCHAR(255)  
    ,@CreditBranchID dbo.BranchID  
+   ,@OriginatorAccountID dbo.AccountID         -- payer account captured before GL override  
+   ,@OriginatorAccountTypeID dbo.SystemSubID   -- payer account type: C=Customer, G=GL  
   
   --SELECT 'Kamunya'  
   IF (SELECT ISNULL(ClgFileGeneratedDate, EODDate)  
@@ -2361,6 +2363,9 @@ BEGIN
   
    SELECT @TrxBranchID = @DebitOurBranchID,@OurBranchID = @DebitOurBranchID  
    --SET @DebitOurBranchID = @ClearingTrxBranchID  
+   -- Capture originator (payer) account and type before they are overwritten with the clearing GL  
+   SET @OriginatorAccountID     = @DebitAccountID  
+   SET @OriginatorAccountTypeID = dbo.f_GetAccountTypeID(@DebitOurBranchID, @DebitAccountID)  
    SET @DebitAccountID = dbo.f_GetCurrencyBranchGLAccountID(@DebitOurBranchID, isNULL(@DRTrxCurrencyID, 'TZS'), 'CEN_BANK_AC')  
    SET @DebitAccountType = dbo.f_GetAccountTypeID(@DebitOurBranchID, @DebitAccountID)  
    SET @DebitProductID = ISNULL(dbo.f_GetAccountProductID(@DebitOurBranchID, @DebitAccountID), '')  
@@ -2458,6 +2463,16 @@ BEGIN
   
     RETURN  
    END  
+  
+   -- Stamp the originator (payer) account onto the clearing record for reporting.
+   -- t_TrxClearing.Reference (varchar 200) already exists - no schema change needed.
+   UPDATE t_TrxClearing
+   SET    Reference              = @OriginatorAccountID
+         ,AccountTypeID          = @OriginatorAccountTypeID  -- 'C' (Customer) not 'G' (GL)
+   WHERE  TrxBatchID             = @TrxBatchID
+     AND  TrxType                = 'OD'
+     AND  DrawerOrPayeeAccountID = @CreditAccountID
+     AND  ISNULL(Reference, '')  = ''
   
    DECLARE @DRChargeDescription VARCHAR(35)  
   
