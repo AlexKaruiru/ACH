@@ -1,4 +1,4 @@
-CREATE PROCEDURE [dbo].[p_AddInwardTrx]       
+ALTER PROCEDURE [dbo].[p_AddInwardTrx]       
 (      
  @TrxBranchID   BranchID,      
  @TrxBatchID    VarChar(8) OUTPUT,      
@@ -510,6 +510,15 @@ Declare @ChqID Int
     EXEC dbo.p_GetNextTrxSerialNo @OurBranchID = @TrxBranchID,      
     @NextTrxSerialNo = @SerialID OUTPUT,      
     @TrxSerialTypeID = 'TR'      
+    
+    IF ISNULL(@DrawerOrPayee, '') <> '' 
+    BEGIN
+        IF @TrxTypeID = 'IC'
+            SET @TrxDescription = ISNULL(@TrxDescription, '') + ' | From: ' + LTRIM(RTRIM(@DrawerOrPayee))
+        ELSE IF @TrxTypeID = 'ID'
+            SET @TrxDescription = ISNULL(@TrxDescription, '') + ' | To: ' + LTRIM(RTRIM(@DrawerOrPayee))
+    END
+    
     SELECT @TempTrxDescID = @TrxDescriptionID,      
     @TempTrxDesc = @TrxDescription,      
     @TempTrxTypeID = @TrxTypeID      

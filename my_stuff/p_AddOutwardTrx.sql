@@ -1,4 +1,4 @@
-CREATE   PROCEDURE [dbo].[p_AddOutwardTrx] (    
+ALTER  PROCEDURE [dbo].[p_AddOutwardTrx] (    
  @TrxBranchID dbo.BranchID    
  ,@TrxBatchID VARCHAR(8) OUTPUT    
  ,@TrxBatchSLNo SMALLINT    
@@ -728,6 +728,14 @@ BEGIN
   BEGIN    
    SELECT @TrxDescription = 'Outward Credit Chq#: ' + CAST(@ChequeID AS VARCHAR(10)) + ' Bank :' + dbo.f_GetClearingBankName(@BankID)    
   END    
+  
+  IF ISNULL(@DrawerOrPayee, '') <> '' 
+  BEGIN
+      IF @TrxTypeID = 'OC'
+          SET @TrxDescription = ISNULL(@TrxDescription, '') + ' | To: ' + LTRIM(RTRIM(@DrawerOrPayee))
+      ELSE IF @TrxTypeID = 'OD'
+          SET @TrxDescription = ISNULL(@TrxDescription, '') + ' | From: ' + LTRIM(RTRIM(@DrawerOrPayee))
+  END
     
   SELECT @TempTrxDescID = @TrxDescriptionID    
    ,@TempTrxDesc = @TrxDescription    
