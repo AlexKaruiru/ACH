@@ -725,20 +725,28 @@ BEGIN
    ,@NextTrxSerialNo = @SerialID OUTPUT  
    ,@TrxSerialTypeID = 'TR'  
   
-  IF @TrxTypeID = 'OC'  
-  BEGIN  
-   SELECT @TrxDescription = 'Outward Credit Chq#: ' + CAST(@ChequeID AS VARCHAR(10)) + ' Bank :' + dbo.f_GetClearingBankName(@BankID)  
-  END  
+  IF @TrxTypeID = 'OC'    
+  BEGIN    
+   SELECT @TrxDescription = 'Outward Credit Chq#: ' + CAST(@ChequeID AS VARCHAR(10)) + ' Bank :' + dbo.f_GetClearingBankName(@BankID)    
+  END    
   
-  SELECT @TempTrxDescID = @TrxDescriptionID  
-   ,@TempTrxDesc = @TrxDescription  
-   ,@TempTrxTypeID = @TrxTypeID  
-  
-  SET @ValueDatedd = CASE   
-    WHEN @TempTrxTypeID = 'TD'  
-     THEN @TrxDate  
-    ELSE @ValueDate  
-    END  
+  IF ISNULL(@DrawerOrPayee, '') <> '' 
+  BEGIN
+      IF @TrxTypeID = 'OC'
+          SET @TrxDescription = ISNULL(@TrxDescription, '') + ' | To: ' + LTRIM(RTRIM(@DrawerOrPayee))
+      ELSE IF @TrxTypeID = 'OD'
+          SET @TrxDescription = ISNULL(@TrxDescription, '') + ' | From: ' + LTRIM(RTRIM(@DrawerOrPayee))
+  END
+    
+  SELECT @TempTrxDescID = @TrxDescriptionID    
+   ,@TempTrxDesc = @TrxDescription    
+   ,@TempTrxTypeID = @TrxTypeID    
+    
+  SET @ValueDatedd = CASE     
+    WHEN @TempTrxTypeID = 'TD'    
+     THEN @TrxDate    
+    ELSE @ValueDate    
+    END      
   
   --Print @TempTrxDescID    
   --Print '1'     

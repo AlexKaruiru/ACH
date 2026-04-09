@@ -509,9 +509,18 @@ Declare @ChqID Int
     --1. Post to the IB GL of Trx Branch      
     EXEC dbo.p_GetNextTrxSerialNo @OurBranchID = @TrxBranchID,    
     @NextTrxSerialNo = @SerialID OUTPUT,    
-    @TrxSerialTypeID = 'TR'    
-    SELECT @TempTrxDescID = @TrxDescriptionID,    
-    @TempTrxDesc = @TrxDescription,    
+    @TrxSerialTypeID = 'TR'  
+      
+    IF ISNULL(@DrawerOrPayee, '') <> '' 
+    BEGIN
+        IF @TrxTypeID = 'IC'
+            SET @TrxDescription = ISNULL(@TrxDescription, '') + ' | From: ' + LTRIM(RTRIM(@DrawerOrPayee))
+        ELSE IF @TrxTypeID = 'ID'
+            SET @TrxDescription = ISNULL(@TrxDescription, '') + ' | To: ' + LTRIM(RTRIM(@DrawerOrPayee))
+    END
+    
+    SELECT @TempTrxDescID = @TrxDescriptionID,      
+    @TempTrxDesc = @TrxDescription,      
     @TempTrxTypeID = @TrxTypeID    
     SET @ValueDatedd = CASE    
             WHEN @TempTrxTypeID = 'TD' THEN @TrxDate    

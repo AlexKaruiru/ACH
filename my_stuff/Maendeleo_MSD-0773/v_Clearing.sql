@@ -54,8 +54,19 @@ AS
 			Trxbatchid,
 			TrxbatchSlNo,
 			OurBranchID,
-			AccountTypeID,
-			AccountID,
+			-- For OD (outward EFT) rows: use originator customer account stored in Reference.
+			-- Reference was populated by p_PostUploadFileData after p_AddOutwardTrx runs.
+			-- For all other TrxTypes, or if Reference is NULL, fall back to the original GL AccountID.
+			CASE
+				WHEN Trxtype = 'OD' AND ISNULL(Reference, '') <> ''
+					THEN AccountTypeID   -- already updated to 'C' by p_PostUploadFileData UPDATE
+				ELSE AccountTypeID
+			END AS AccountTypeID,
+			CASE
+				WHEN Trxtype = 'OD' AND ISNULL(Reference, '') <> ''
+					THEN Reference       -- originator customer account (e.g. company salary payer)
+				ELSE AccountID           -- GL account (CEN_BANK_AC) for all other cases
+			END AS AccountID,
 			ChequeDigit,
 			VoucherCode,
 			ReturnCodeID,
@@ -98,6 +109,3 @@ AS
 			TrxType,
 			DATE
 	FROM	t_trxclearing(NOLOCK)
-
-
-
