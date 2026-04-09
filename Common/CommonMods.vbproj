@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -279,7 +279,7 @@
     <Compile Include="Modules\Modscan.vb" />
     <Compile Include="Modules\Montran.vb" />
     <Compile Include="Modules\ETHFiles.vb" />
-     <Compile Include="Modules\TanzaniaFiles.vb" />
+    <Compile Include="Modules\TanzaniaFiles.vb" />
     <Compile Include="Modules\GenerationTypes.vb" />
     <Compile Include="Modules\UGFiles.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -445,7 +445,7 @@
       <Name>BRClearing</Name>
     </ProjectReference>
     <ProjectReference Include="..\BRClrAlDigiSign\BRClrAlDigiSign.csproj">
-      <Project>{8a78dfa2-3d11-4dd8-8546-52183e7f77ff}</Project>
+      <Project>{1AE73DA6-1C5D-4F3D-9D9C-918CBDE7DA3A}</Project>
       <Name>BRClrAlDigiSign</Name>
     </ProjectReference>
   </ItemGroup>

@@ -41,6 +41,29 @@
 ### 5. Backward Compatibility
 - Retained hardcoded keys as a fallback if configuration keys are not provided.
 
+### 6. Symmetric Encryption Support
+- **Shared Key**:
+  - Added support for symmetric encryption and decryption using a shared key.
+  - The shared key is dynamically loaded from the configuration file using the `SharedKey` key:
+    ```xml
+    <add key="SharedKey" value="YourSharedSymmetricKeyHere"/>
+    ```
+  - Symmetric encryption is implemented using AES.
+
+- **Methods Added**:
+  - `EncryptWithSharedKey`: Encrypts data using the shared key.
+  - `DecryptWithSharedKey`: Decrypts data using the shared key.
+
+- **Configuration Example**:
+  ```xml
+  <appSettings>
+      <add key="SharedKey" value="YourSharedSymmetricKeyHere"/>
+  </appSettings>
+  ```
+
+- **Logging**:
+  - Logs whether the shared key is configured and used for encryption/decryption.
+
 ---
 
 ## Current Certificate Implementation
@@ -95,6 +118,18 @@
   - **Outgoing Leg**:
     - Encrypt files using the receiver's public key.
     - Sign the file hash for integrity verification.
+
+### 6. Shared Key Configuration
+- Added the following key to all relevant configuration files:
+  ```xml
+  <add key="SharedKey" value="YourSharedSymmetricKeyHere"/>
+  ```
+- Updated files:
+  - `TzIncomingClearingService\App.config`
+  - `BRNETUploadDownload\app.config`
+  - `BRRTGSProcessing\App.config`
+  - `Common\app.config`
+  - `BRNETUploadDownload\bin\Debug\BRNETUploadDownload.exe.config`
 
 ---
 

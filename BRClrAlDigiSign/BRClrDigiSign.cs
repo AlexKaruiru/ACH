@@ -1,16 +1,11 @@
-﻿using Org.BouncyCastle.Cms;
+using Org.BouncyCastle.Cms;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
-using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Crypto.Prng;
-using Org.BouncyCastle.Math;
-using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509.Store;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
@@ -19,13 +14,9 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
-using System.Security.Cryptography.Pkcs;
 using System.Security.Cryptography.X509Certificates;
-using System.Security.Cryptography.Xml;
-using System.Text;
-using System.Text.RegularExpressions;
+using System.Security.Cryptography.Pkcs;
 using System.Windows.Forms;
-using System.Xml;
 
 namespace BRCATDS
 {
