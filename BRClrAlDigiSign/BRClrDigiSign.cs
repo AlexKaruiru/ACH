@@ -174,23 +174,34 @@ namespace BRCATDS
                     }
                     foreach (string fileName in fileEntries)
                     {
-
-                        if (CountryID == "TZ" && k == false)
-                        {
-                            //MessageBox.Show("Step 5.3.1.7 - BRQVL");
-                            signature.BRQVL(fileName, SignedFile, strBatchPath, TokenPass.Trim(), jksFilePath, strJavaExeInstallation);
-                        }
-                        if (CountryID == "TZ" && k == true)
-                        {
-                            fileEncrypted = SignedFile + "\\" + Path.GetFileName(fileName);
-                            byte[] b = signature.BRQVL(File.ReadAllBytes(fileName), TokenPass.Trim(), CountryID);
-                            File.WriteAllBytes(fileEncrypted, b);
-                        }
-                        else if (CountryID == "UG" || CountryID == "ET")
+                        fileEncrypted = SignedFile + "\\" + Path.GetFileName(fileName);
+                        if (CountryID == "UG" || CountryID == "ET")
                         {
                             fileEncrypted = SignedFile + "\\" + Path.GetFileNameWithoutExtension(fileName) + ".chk";
-                            byte[] b = signature.BRQVL(File.ReadAllBytes(fileName), TokenPass.Trim(), CountryID);
-                            File.WriteAllBytes(fileEncrypted, b);
+                        }
+
+                        if (BRRSACryptography.CryptographyHelper.EnableEncryption)
+                        {
+                            // NEW: Hybrid Encryption (Scenario 2 & 3)
+                            BRRSACryptography.CryptographyHelper.EncryptFile(fileName, fileEncrypted);
+                        }
+                        else
+                        {
+                            // LEGACY: Signing (Scenario 1)
+                            if (CountryID == "TZ" && k == false)
+                            {
+                                signature.BRQVL(fileName, SignedFile, strBatchPath, TokenPass.Trim(), jksFilePath, strJavaExeInstallation);
+                            }
+                            else if (CountryID == "TZ" && k == true)
+                            {
+                                byte[] b = signature.BRQVL(File.ReadAllBytes(fileName), TokenPass.Trim(), CountryID);
+                                File.WriteAllBytes(fileEncrypted, b);
+                            }
+                            else if (CountryID == "UG" || CountryID == "ET")
+                            {
+                                byte[] b = signature.BRQVL(File.ReadAllBytes(fileName), TokenPass.Trim(), CountryID);
+                                File.WriteAllBytes(fileEncrypted, b);
+                            }
                         }
                         msgCallBack = "success";
                     }
@@ -254,10 +265,19 @@ namespace BRCATDS
         }
         private void RemoveSign(string SignedFile, string cert, string unSignedFile, string CountryID, bool TokenBased)
         {
-            string z = "";
-            var signature = new BRCSTDS(cert, false, out z, CountryID, TokenBased);
-            byte[] b = ReadSigned(File.ReadAllBytes(SignedFile));
-            File.WriteAllBytes(unSignedFile, b);
+            if (BRRSACryptography.CryptographyHelper.EnableEncryption)
+            {
+                // NEW: Hybrid Decryption
+                BRRSACryptography.CryptographyHelper.DecryptFile(SignedFile, unSignedFile);
+            }
+            else
+            {
+                // LEGACY: CMS Signature Removal
+                string z = "";
+                var signature = new BRCSTDS(cert, false, out z, CountryID, TokenBased);
+                byte[] b = ReadSigned(File.ReadAllBytes(SignedFile));
+                File.WriteAllBytes(unSignedFile, b);
+            }
         }
     }
     public class BRCSTDS
