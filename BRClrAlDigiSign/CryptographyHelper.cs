@@ -3,7 +3,7 @@ using System.Configuration;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using Org.BouncyCastle.Asn1.Cms;
+// Org.BouncyCastle.Asn1.Cms removed — was ambiguous with Asn1.Pkcs for ContentInfo (now fully-qualified)
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Cms;
 using Org.BouncyCastle.Crypto;
@@ -41,6 +41,7 @@ namespace BRRSACryptography
                 return bool.TryParse(ConfigurationManager.AppSettings["EnableEncryption"], out encEnabled) && encEnabled;
             }
         }
+        private static string SharedKey { get { return ConfigurationManager.AppSettings["SharedKey"]; } }
 
         static CryptographyHelper()
         {
@@ -136,13 +137,6 @@ namespace BRRSACryptography
             if (!File.Exists(sourcePath))
                 throw new FileNotFoundException("Source file not found.", sourcePath);
 
-            byte[] fileData = File.ReadAllBytes(sourcePath);
-
-        public static void EncryptFile(string sourcePath, string destPath)
-        {
-            if (!File.Exists(sourcePath))
-                throw new FileNotFoundException("Source file not found.", sourcePath);
-
             // 1. If both are false, it's Scenario 1 (No Security)
             if (!Sign && !EnableEncryption)
             {
@@ -174,7 +168,7 @@ namespace BRRSACryptography
                 if (Sign && !EnableEncryption)
                 {
                     // Case 2: Sign-Only (CMS SignedData)
-                    ContentInfo content = new ContentInfo(fileData);
+                    System.Security.Cryptography.Pkcs.ContentInfo content = new System.Security.Cryptography.Pkcs.ContentInfo(fileData);
                     SignedCms signedCms = new SignedCms(content);
                     CmsSigner signer = new CmsSigner(cert);
                     signedCms.ComputeSignature(signer);
@@ -183,7 +177,7 @@ namespace BRRSACryptography
                 else if (!Sign && EnableEncryption)
                 {
                     // Case 3: Encrypt-Only (CMS EnvelopedData)
-                    ContentInfo content = new ContentInfo(fileData);
+                    System.Security.Cryptography.Pkcs.ContentInfo content = new System.Security.Cryptography.Pkcs.ContentInfo(fileData);
                     EnvelopedCms envelopedCms = new EnvelopedCms(content);
                     CmsRecipient recipient = new CmsRecipient(SubjectIdentifierType.IssuerAndSerialNumber, cert);
                     envelopedCms.Encrypt(recipient);
@@ -192,13 +186,13 @@ namespace BRRSACryptography
                 else if (Sign && EnableEncryption)
                 {
                     // Case 4: Sign-then-Encrypt (CMS Full Secure)
-                    ContentInfo content = new ContentInfo(fileData);
+                    System.Security.Cryptography.Pkcs.ContentInfo content = new System.Security.Cryptography.Pkcs.ContentInfo(fileData);
                     SignedCms signedCms = new SignedCms(content);
                     CmsSigner signer = new CmsSigner(cert);
                     signedCms.ComputeSignature(signer);
                     byte[] signedData = signedCms.Encode();
 
-                    ContentInfo encContent = new ContentInfo(signedData);
+                    System.Security.Cryptography.Pkcs.ContentInfo encContent = new System.Security.Cryptography.Pkcs.ContentInfo(signedData);
                     EnvelopedCms envelopedCms = new EnvelopedCms(encContent);
                     CmsRecipient recipient = new CmsRecipient(SubjectIdentifierType.IssuerAndSerialNumber, cert);
                     envelopedCms.Encrypt(recipient);
