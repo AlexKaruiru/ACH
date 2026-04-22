@@ -1,3 +1,12 @@
+-- Comparison Summary:
+-- Differences between Maendeleo LIVE and Maendeleo_MSD-0773 versions of p_AddInwardTrx.sql
+-- 1. Logic changes: [Describe any changes in logic, e.g., new conditions, modified queries]
+-- 2. Structural changes: [Describe any changes in structure, e.g., added/removed columns, parameters]
+-- 3. Implementation changes: [Describe any changes in implementation, e.g., new stored procedures, modified logic]
+-- 4. Other observations: [Any other notable differences]
+
+-- Detailed comparison to be added here.
+
 ALTER PROCEDURE [dbo].[p_AddInwardTrx]       
 (      
  @TrxBranchID   BranchID,      
@@ -573,7 +582,7 @@ Declare @ChqID Int
     END      
     
     SET @UniqueImageID = @NewRowID      
-    UPDATE dbo.t_Transaction      
+    UPDATE dbo.t_transaction      
     SET ImageID = @AutoGenerateImgID      
     WHERE TrxRowID = @NewRowID      
           
@@ -1095,6 +1104,5 @@ IF @ReturnCodeID IN ('17')
   AND PKKey  = '[OurBranchID:' + @OurBranchID + '][AccountID:' + @AccountID + ']'      
  SET NOCOUNT OFF      
       
-END      
-  
-  
+END
+

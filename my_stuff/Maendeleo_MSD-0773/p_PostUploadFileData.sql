@@ -1041,7 +1041,8 @@ BEGIN
    ,ContraGLID  
    ,TrxFlagID  
    ,ImageID  
-   ,TrxPrinted     ,IsTrxPending  
+   ,TrxPrinted  
+   ,IsTrxPending  
    ,CreatedBy  
    ,CreatedOn  
   FROM @Transactions  
@@ -1411,7 +1412,7 @@ BEGIN
     SELECT @FeeCode = FeeCode  
      ,@DbContraAccountID = GLAccountID  
      ,@Narration = Narration + ' - ' + FeeCode  
-    FROM #ATMFeeCode  
+   FROM #ATMFeeCode  
     WHERE ColID = @ATMID  
   
     SELECT @TotalSumUpload = SUM(Amount)  
@@ -1478,15 +1479,19 @@ BEGIN
      ,NULL  
      ,''  
      ,''  
-     ,'007'  
+     ,@DrTrxDescriptionID  
      ,@Narration  
-     ,@DbContraAccountID  
-     ,''  
-     ,0  
-     ,0  
-     ,0  
-     ,@OperatorID  
-     ,GETDATE()  
+     ,CASE @DbContraAccountType  
+      WHEN 'G'  
+       THEN @DbContraAccountID  
+      ELSE dbo.f_GetGLInterfaceAccountID(@BankID, dbo.f_getAccountProductID(@PostToBranchID, @DbContraAccountID), dbo.f_GetProductTypeID(@BankID, dbo.f_getAccountProductID(@PostToBranchID, @DbContraAccountID)), 'CONTROL_AC')  
+      END  
+    ,''  
+    ,0  
+    ,0  
+    ,0  
+    ,@OperatorID  
+    ,GETDATE()  
   
     SET @ATMID = @ATMID + 1  
    END  
@@ -2305,8 +2310,6 @@ BEGIN
    ,@CreditAccountID dbo.AccountID  
    ,@BeneficiaryName VARCHAR(255)  
    ,@CreditBranchID dbo.BranchID  
-   ,@OriginatorAccountID dbo.AccountID         -- payer account captured before GL override  
-   ,@OriginatorAccountTypeID dbo.SystemSubID   -- payer account type: C=Customer, G=GL  
   
   --SELECT 'Kamunya'  
   IF (SELECT ISNULL(ClgFileGeneratedDate, EODDate)  
@@ -2362,9 +2365,6 @@ BEGIN
   
    SELECT @TrxBranchID = @DebitOurBranchID,@OurBranchID = @DebitOurBranchID  
    --SET @DebitOurBranchID = @ClearingTrxBranchID  
-   -- Capture originator (payer) account and type before they are overwritten with the clearing GL  
-   SET @OriginatorAccountID     = @DebitAccountID  
-   SET @OriginatorAccountTypeID = dbo.f_GetAccountTypeID(@DebitOurBranchID, @DebitAccountID)  
    SET @DebitAccountID = dbo.f_GetCurrencyBranchGLAccountID(@DebitOurBranchID, isNULL(@DRTrxCurrencyID, 'TZS'), 'CEN_BANK_AC')  
    SET @DebitAccountType = dbo.f_GetAccountTypeID(@DebitOurBranchID, @DebitAccountID)  
    SET @DebitProductID = ISNULL(dbo.f_GetAccountProductID(@DebitOurBranchID, @DebitAccountID), '')  
@@ -2462,16 +2462,6 @@ BEGIN
   
     RETURN  
    END  
-  
-   -- Stamp the originator (payer) account onto the clearing record for reporting.
-   -- t_TrxClearing.Reference (varchar 200) already exists - no schema change needed.
-   UPDATE t_TrxClearing
-   SET    Reference              = @OriginatorAccountID
-         ,AccountTypeID          = @OriginatorAccountTypeID  -- 'C' (Customer) not 'G' (GL)
-   WHERE  TrxBatchID             = @TrxBatchID
-     AND  TrxType                = 'OD'
-     AND  DrawerOrPayeeAccountID = @CreditAccountID
-     AND  ISNULL(Reference, '')  = ''
   
    DECLARE @DRChargeDescription VARCHAR(35)  
   
@@ -2594,5 +2584,5 @@ BEGIN
  SELECT @TrxBatchID TrxBatchID --THIS IS THE BATCHID RETURNED TO FRON END   
   
  SET NOCOUNT OFF  
-END  
+END
 
