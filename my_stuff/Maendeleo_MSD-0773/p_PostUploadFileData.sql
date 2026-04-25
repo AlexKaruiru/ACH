@@ -2410,7 +2410,7 @@ BEGIN
     ,@SerialID = @SerialID  
     ,@OurBranchID = '000' --@DebitOurBranchID  
     ,@AccountTypeID = @DebitAccountType  
-    ,@AccountID = @AccountID -- AccountID is now OriginatorAccountID for OD
+    ,@AccountID = @DrawerAccountID -- AccountID is now OriginatorAccountID for OD
     ,@ProductID = @DebitProductID  
     ,@ModuleID = '3070'  
     ,@TrxTypeID = 'OD'  

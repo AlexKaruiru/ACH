@@ -102,7 +102,7 @@ BEGIN
    
   
   
-  
+
  IF EXISTS(SELECT 1 FROM t_Transaction WHERE Try_parse(ReferenceNo AS bigint) = @ColumnID AND TrxTypeID IN ('IC','ID'))  
  BEGIN  
   IF EXISTS (SELECT 1 FROM t_IncomingTransactions WHERE ColumnID = @ColumnID AND isNull(Verified,0) = 0)  
@@ -133,7 +133,24 @@ BEGIN
  END  
     
    
- SELECT @ClearingTrxBranchID = TrxBranchID,  
+-- Append originator information to TrxDescriptionID for TrxTypeID = 'ID' and TrxDescriptionID = '004'
+IF @TrxTypeID = 'ID' AND @TrxDescriptionID = '004'
+BEGIN
+    DECLARE @Originator NVARCHAR(200)
+
+    -- Fetch the originator's name from t_IncomingTransactions
+    SELECT @Originator = DrawerOrPayee
+    FROM t_IncomingTransactions
+    WHERE ColumnID = @ColumnID AND TrxType = 'ID'
+
+    -- Append the originator's name to the TrxDescriptionID
+    IF @Originator IS NOT NULL
+    BEGIN
+        SET @TrxDescriptionID = @TrxDescriptionID + ' | From: ' + @Originator
+    END
+END
+
+SELECT @ClearingTrxBranchID = TrxBranchID,  
    @OurBranchID = OurBranchID,  
    @AccountTypeID = AccountType,  
    @AccountID = AccountID,  
@@ -1494,5 +1511,4 @@ BEGIN
    END  
   END  
  SET NOCOUNT OFF  
-End  
-  
+End
