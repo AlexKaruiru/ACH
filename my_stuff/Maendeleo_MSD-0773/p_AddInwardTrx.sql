@@ -1,4 +1,4 @@
-CREATE PROCEDURE [dbo].[p_AddInwardTrx]     
+ALTER  PROCEDURE [dbo].[p_AddInwardTrx]     
 (    
  @TrxBranchID   BranchID,    
  @TrxBatchID    VarChar(8) OUTPUT,    
@@ -166,7 +166,20 @@ BEGIN
   BEGIN    
    SET @TrxDescription = 'Represented Cheque Chq No. ' + CAST(@ChequeID as VARCHAR) + ' From Bnk ' + @BankID    
   END    
-  SET @TrxBranchID = dbo.f_GetHOBranchID((Select BankID from t_SystemBankSetting))   
+
+  -- ============================================================
+  -- Added for Inward Cheque Narration - Appends Drawer/Payee to Remarks
+  -- ============================================================
+  IF ISNULL(@DrawerOrPayee, '') <> '' AND @ReturnCodeID = '00'
+  BEGIN
+      IF @TrxTypeID = 'IC'
+          SET @Remarks = ISNULL(@Remarks, '') + ' Via: ' + LTRIM(RTRIM(@DrawerOrPayee))
+      ELSE IF @TrxTypeID = 'ID'
+          SET @Remarks = ISNULL(@Remarks, '') + ' Via: ' + LTRIM(RTRIM(@DrawerOrPayee))
+  END
+  -- ============================================================
+
+  SET @TrxBranchID = dbo.f_GetHOBranchID((Select BankID from t_SystemBankSetting))     
    
   --Validate Cheque    
   --Validate Invalid Cheques    
