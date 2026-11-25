@@ -296,6 +296,7 @@ Questions the revised round answers:
 ## Files in this folder
 | File | Purpose |
 |---|---|
+| `BANK_COMMUNICATION.md` | Plain-language explanation for the bank, plus the way forward for the settled cheque |
 | **`00_DIAGNOSIS_RUN_IN_ORDER.sql`** | **Start here.** Steps 1–9 in order, plus the files to collect. Supersedes the order of 01/02. |
 | `01_READONLY_scripts_for_bank.sql` | Broad evidence: inward, extra details, DRUNP files, current procedure text, recently changed objects, plus the files to collect |
 | `02_READONLY_why_OrgnlTxId_was_blank.sql` | Targeted to cheque 211, using the IDs from the bank's screenshot |
