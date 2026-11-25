@@ -208,6 +208,77 @@ Which of these happened is answered by `02_READONLY_why_OrgnlTxId_was_blank.sql`
 
 So "the tool hasn't changed" holds for the exe. **Several DB procedures in the chain were changed in May–Aug 2026**, and the 13-Jul process change makes next-day unpays (and this failure) possible.
 
+### Round 2 Steps 1–3 results (25-Nov)
+
+**S1, objects referencing History / CEDate / DELETE of inwards.** The query was too broad: `%CEDate%` also matches "Balan**ceDate**", so dozens of balance functions came back. The relevant hits:
+
+| Object | Why |
+|---|---|
+| `p_DeleteUnpostedInwardsTrx` | Name suggests it removes or moves unposted inwards. **Prime suspect.** |
+| `sb_ClearEffects`, `ps_ClearEffects` | "Clear effects". **CEDate probably = Clear-Effects date** (it differs per branch). This may run per branch during the day and move inwards to History. |
+| `pc_SystemBranchStatus` | Sets branch dates (CEDate?) |
+| `p_DoInwardsFileTrxValidationsTZ` | Called at the end of `p_AddInwardsTZ` |
+| `sb_EndOfDay` (+ `_28042026` backup), `ps_UpdateGLBalance` | EOD |
+| `Proc_CreateXMLFiles_Tanzania_CTS` | The non-selected generator (it mentions History) |
+| `rw_IncomingTransactions` | A report |
+
+**S2, cheque 211 IS in `t_IncomingTransactionsHistory`** (ColumnID 4344). The columns were unlabelled; values recognised:
+- `TrxID = doc-001-495-0043421` (filled) and `MsgID = QNF2611201243410000002379491`.
+- FileName `MBTLTZTZ261120124341973.`, account 024244426061, ID, cheque 211, 5,323,100.
+- `ReturnedTempID = 50`, operator `MB0194`, and the timestamp **2026-11-21 11:30:58.307** (the manual unpay).
+- **Row `Date = 2026-11-21`.** A separate `2026-11-20` value is also in the row; the ExtraDetails TrxDate is 20-Nov.
+
+So History had a valid TrxID. Had the generator looked in History, OrgnlTxId would have been filled (without the `_`).
+
+**S3, the "next-day unpays" query found nothing relevant.**
+- The only row is cheque 205 (5,120,000, unpaid today 25-Nov, DRUNP…CORUTZTZ…1038), still in the live table.
+- Cheque 211 did not show because its History `Date` (21-Nov) equals the unpay date. The History Date is not the load date.
+- **The query must compare against the ExtraDetails `TrxDate` (load date), not the History `Date`.** Rewritten for round 3.
+
+**Still open:** when and by whom the cheque 211 row was moved from `t_IncomingTransactions` to History on 21-Nov, between 11:30:58 (unpay) and ~12:59 (generation).
+
+### Round 3 results (25-Nov)
+
+**A1: cheque 211 History row, columns labelled.**
+- `Date` = 21-Nov, `Createdon` = **20-Nov**, `ClearedDate` = 21-Nov, `VerifiedOn` = 21-Nov.
+- `SupervisedByOne` = MB0194 at **21-Nov 11:30:58.307**.
+- `IsProcessed` = 1, `Paid` = 1, `Returned` = 1, `ReturnedTempID` = 50.
+- `TrxID` = `doc-001-495-0043421`, `MsgID` = `QNF2611201243410000002379491`.
+- There is no "moved-to-History at" column. `Date` was rolled 20 → 21-Nov, so unprocessed inwards seem to be **carried forward** in the live table to the next day, not moved.
+
+**A3: unpays since June. Next-day unpays are NORMAL: 89 of 111.** Almost all of them are in History, so the generator presumably succeeded for them. So "next-day → inward already in History → blank TrxID" **cannot on its own** explain why cheque 211 failed. The live table must normally still hold the item when the unpaid file is generated. Something moved cheque 211 out **between 11:30 and ~12:59 on that day**.
+
+**A2: precise movers.** Only three objects **INSERT into History**:
+
+| Object | Notes |
+|---|---|
+| `ps_UpdateGLBalance` | EOD. Also DELETES-LIVE. |
+| **`Proc_CreateXMLFiles_Tanzania_CTS`** | The **non-selected** file generator, 2021 version. **INSERTS-HISTORY and DELETES-LIVE.** `TanzaniaFiles.vb` calls it whenever the user generates **without ticking items** (cheques, cheque returns, EFTs, DDs). It is a **daytime** job. |
+| `rw_IncomingTransactions` | A report (inserts into History?). Check later. |
+
+**New prime suspect:** a generation run **without selection** between 11:30 and 12:59 (e.g. outward cheques or EFTs, or an unpaid run with nothing ticked) used `Proc_CreateXMLFiles_Tanzania_CTS`. That moved processed inwards, including the just-unpaid cheque 211, into History. The 12:59 unpaid generation then found no TrxID.
+- This is a **race condition**. It depends on the order of operator actions that day, which fits "rare, twice in November".
+- Alternatively, the 12:59 unpaid generation itself ran without selection through that procedure. It might move rows before reading TrxID.
+
+**Ruled out (texts saved):**
+- `p_DeleteUnpostedInwardsTrx` deletes only **unprocessed/unverified** inwards; cheque 211 was processed.
+- `sb_ClearEffects` / `ps_ClearEffects` only set `CEDate` (Clear-Effects date) and run the CLR sub-process.
+- `pc_SystemBranchStatus` only reads.
+- `p_DoInwardsFileTrxValidationsTZ` only updates and deletes locks.
+
+**A4** returned no rows. **`p_AddClearingFileStatus.sql` was saved empty (0 bytes).** Re-save it.
+
+**A5:** CEDate is 23-Nov for branches 000/001/003 and 24-Nov for the rest. Clear-effects is behind for 3 branches. Not related.
+
+### DEPLOYED 25-Nov-2026: generator History fix (`sql/11_25_2026_Fixes`)
+- **Pre-check:** ColumnID 4344 has no live row; History has `doc-001-495-0043421`. ✔
+- **Index:** `t_IncomingTransactionsHistory` has only the clustered PK on `TrxRowID`. There is **no index on ColumnID**, so each History lookup is a table scan. It is only hit for unpaid items not found live (plus 2 cursor lookups). Check the table size. If it is large, suggest to the DBA a nonclustered index on (ColumnID) INCLUDE (ChequeID, TrxID, MsgID, [Date]).
+- **Applied:**
+  - `Proc_CreateXMLFiles_Tanzania_Selected_CTS_25112026` (backup) created 16:38:34.
+  - `Proc_CreateXMLFiles_Tanzania_Selected_CTS` altered 16:38:57.
+  - FixPresent = 14489 (the tag was found). ✔
+- **Pending:** a functional test (a rolled-back run for TrxRowID 80031940 with a login that can read BRNET_IMAGEServer, or watch the next unpaid item whose inward was loaded on an earlier day).
+
 ### Next steps (revised 25-Nov after Step 7)
 `00_DIAGNOSIS_RUN_IN_ORDER.sql` has been rewritten as **round 2**. The round-1 queries are removed; their results are in this log. Order:
 1. **STEP 1:** `sp_helptext` the objects, saved to files (priorities 1/2/3).

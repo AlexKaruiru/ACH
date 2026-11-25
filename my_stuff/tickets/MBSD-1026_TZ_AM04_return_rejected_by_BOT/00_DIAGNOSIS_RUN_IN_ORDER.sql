@@ -1,83 +1,130 @@
 /* =====================================================================================
-   MBSD-1026 - DIAGNOSIS, ROUND 2 (updated 25-Nov-2026 after reading the live objects)
-   Client DB: BRNET_MB_LIVE on MNLDHQCBSDB02\SQL2019. Full findings: NOTES.md
+   MBSD-1026 - DIAGNOSIS, ROUND 3 (25-Nov-2026). Findings so far: NOTES.md
+   Client DB: BRNET_MB_LIVE on MNLDHQCBSDB02\SQL2019. READ-ONLY.
 
    WHERE WE ARE
-   - Cheque 211 was loaded 20-Nov and unpaid manually 21-Nov 11:30. The file was generated ~12:59.
-     BOT rejected it: "missing OrgnTxID".
-   - The live generator looks up TrxID (= OrgnlTxId) ONLY in t_IncomingTransactions. The History
-     lookup is commented out. That table holds today's rows only.
-   - The 26-Aug change is NOT the cause (EFT trims only).
-   - 13-Jul-2026 change in p_AddInwardsTZ: auto-unpay at load REMOVED. All items now wait for
-     a manual decision, so next-day unpays happen, and a next-day unpay = inward no longer live.
-   - 15-Jun-2026 change in p_AddInwardsTZ: "_" stripped from BOT's TxId at load. The stored TrxID
-     differs from BOT's.
-   - Generator "28/26" change: unpaid cheques may be selected TWICE (UNION ALL).
+   - Cheque 211 (ColumnID 4344) was unpaid at 21-Nov 11:30:58 by MB0194. The return file
+     (DRUNPBARCTZTZ211120261260) was built at ~12:59. BOT rejected it: "missing OrgnTxID".
+   - The live generator reads TrxID ONLY from t_IncomingTransactions (History lookup commented out).
+   - Cheque 211 is now in t_IncomingTransactionsHistory WITH its TrxID. So something moved it out
+     of the live table between 11:30 and ~12:59. FIND THAT MOVER.
+   - Suspects (from round 2 S1): p_DeleteUnpostedInwardsTrx, sb_ClearEffects / ps_ClearEffects
+     (CEDate = Clear-Effects date?), pc_SystemBranchStatus, p_DoInwardsFileTrxValidationsTZ.
 
-   DONE: live texts saved in my_stuff/sql/11_25_2026 (generator + 26-Aug backup, v_Clearing,
-         p_ProcessIncomingTxns, p_AddOutgoingTrx, p_AddIncomingTrx, p_AddInwardsTZ,
-         p_SuperviseTrx + backup, p_InsertTransactions).
-   DROPPED: old R1 (History check), answered by reading the texts.
-
-   Everything below is READ-ONLY. Run in this order.
+   HOW TO RUN
+   - PART A: run as ONE batch in Results to Text (Ctrl+T) or Grid. Output is one column "Line"
+     with labelled values. Copy all the lines back.
+   - PART B: sp_helptext, Results to File (Ctrl+Shift+F), save to my_stuff/sql/11_25_2026.
    ===================================================================================== */
 
 
-/* ---------- STEP 1. What moves inwards out of t_IncomingTransactions, and when? ----------
-   This is the missing piece: who moves the row, and can it run during the day?
-   sp_helptext every object returned and save it to my_stuff/sql/11_25_2026.                */
-SELECT 'S1' AS Step, OBJECT_NAME(object_id) AS Obj, OBJECTPROPERTY(object_id, 'IsProcedure') AS IsProc
-FROM sys.sql_modules
-WHERE definition LIKE '%t_IncomingTransactionsHistory%'
-   OR definition LIKE '%CEDate%'
-   OR definition LIKE '%DELETE%FROM%t[_]IncomingTransactions%'
-   OR definition LIKE '%TRUNCATE%t[_]IncomingTransactions%'
-ORDER BY 2
+/* =====================================================================================
+   PART A - one batch, labelled output
+   ===================================================================================== */
+SET NOCOUNT ON;
+IF OBJECT_ID('tempdb..#Out') IS NOT NULL DROP TABLE #Out;
+CREATE TABLE #Out (Seq INT IDENTITY(1,1), Line NVARCHAR(MAX));
 
+/* ---------- A1. Cheque 211 History row, every column labelled (images and long text skipped) ---------- */
+DECLARE @sql NVARCHAR(MAX) = N'';
+SELECT @sql = @sql
+     + N'INSERT INTO #Out(Line) SELECT N''A1 History 4344 | ' + c.name + N' = '' + ISNULL('
+     + CASE WHEN TYPE_NAME(c.system_type_id) IN ('datetime', 'smalldatetime', 'datetime2', 'date')
+            THEN N'CONVERT(NVARCHAR(30), ' + QUOTENAME(c.name) + N', 121)'
+            ELSE N'CONVERT(NVARCHAR(400), ' + QUOTENAME(c.name) + N')' END
+     + N', N''NULL'') FROM t_IncomingTransactionsHistory (NOLOCK) WHERE ColumnID = 4344;' + NCHAR(10)
+FROM sys.columns c
+WHERE c.object_id = OBJECT_ID('t_IncomingTransactionsHistory')
+  AND TYPE_NAME(c.system_type_id) NOT IN ('image', 'varbinary', 'binary', 'text', 'ntext', 'xml', 'timestamp')
+  AND c.max_length <> -1
+ORDER BY c.column_id;
+BEGIN TRY EXEC sp_executesql @sql; END TRY
+BEGIN CATCH INSERT INTO #Out(Line) SELECT 'A1 ERROR | ' + ERROR_MESSAGE(); END CATCH
 
-/* ---------- STEP 2. Cheque 211 in History: TrxID filled? Any moved-at / archive time? ---------- */
-SELECT 'S2' AS Step, *
-FROM t_IncomingTransactionsHistory (NOLOCK)
-WHERE ColumnID = 4344 OR (ChequeID = 211 AND ABS(Amount) = 5323100)
+/* ---------- A2. Which objects INSERT into History / DELETE from the live inward table / use CEDate ---------- */
+INSERT INTO #Out(Line)
+SELECT 'A2 Mover? | ' + OBJECT_NAME(m.object_id)
+       + ' | ' + o.type_desc
+       + ' | modified ' + CONVERT(VARCHAR(16), o.modify_date, 120)
+       + ' | ' + CASE WHEN m.definition LIKE '%INTO%t[_]IncomingTransactionsHistory%' THEN 'INSERTS-HISTORY ' ELSE '' END
+               + CASE WHEN m.definition LIKE '%DELETE%FROM%t[_]IncomingTransactions[^H_]%'
+                        OR m.definition LIKE '%DELETE%t[_]IncomingTransactions[^H_]%' THEN 'DELETES-LIVE ' ELSE '' END
+               + CASE WHEN m.definition LIKE '%[^a-z]CEDate%' THEN 'USES-CEDATE' ELSE '' END
+FROM sys.sql_modules m
+JOIN sys.objects o ON o.object_id = m.object_id
+WHERE m.definition LIKE '%INTO%t[_]IncomingTransactionsHistory%'
+   OR m.definition LIKE '%DELETE%t[_]IncomingTransactions[^H_]%'
+   OR m.definition LIKE '%[^a-z]CEDate%'
+ORDER BY OBJECT_NAME(m.object_id);
 
-
-/* ---------- STEP 3. Next-day unpays since July, before vs after the 13-Jul change ----------
-   Expect: few or none before 13-Jul; after it, cheque 211 + the 2nd November case.             */
-SELECT 'S3' AS Step, v.TrxRowID, v.ChequeID, v.Amount, CONVERT(DATE, v.[Date]) AS UnpayDate,
-       CONVERT(DATE, h.[Date]) AS InwardDate, DATEDIFF(DAY, h.[Date], v.[Date]) AS DaysLater, v.Reference
+/* ---------- A3. Unpays since June: day the inward was LOADED (ExtraDetails.TrxDate) vs unpay day ----------
+   LoadedDaysBefore >= 1 = a next-day unpay (the case where the inward may have left the live table). */
+INSERT INTO #Out(Line)
+SELECT 'A3 Unpay | Chq ' + CAST(v.ChequeID AS VARCHAR(10))
+       + ' | Amt ' + CONVERT(VARCHAR(20), CAST(ABS(v.Amount) AS MONEY), 1)
+       + ' | Unpaid ' + CONVERT(VARCHAR(10), v.[Date], 120)
+       + ' | Loaded ' + ISNULL(CONVERT(VARCHAR(10), ed.TrxDate, 120), '?')
+       + ' | LoadedDaysBefore ' + ISNULL(CAST(DATEDIFF(DAY, ed.TrxDate, v.[Date]) AS VARCHAR(5)), '?')
+       + ' | Where ' + CASE WHEN i.ColumnID IS NOT NULL THEN 'LIVE' WHEN h.ColumnID IS NOT NULL THEN 'HISTORY' ELSE 'NOT FOUND' END
+       + ' | Ref ' + ISNULL(v.Reference, '-')
 FROM v_Clearing v (NOLOCK)
-LEFT JOIN t_IncomingTransactionsHistory h (NOLOCK) ON h.ColumnID = v.ColumnID
+LEFT JOIN t_IncomingTransactions i (NOLOCK) ON i.ColumnID = v.ColumnID AND i.ChequeID = v.ChequeID
+LEFT JOIN t_IncomingTransactionsHistory h (NOLOCK) ON h.ColumnID = v.ColumnID AND h.ChequeID = v.ChequeID
+OUTER APPLY (SELECT TOP 1 e.TrxDate
+             FROM t_IncomingClrTrxExtraDetails e (NOLOCK)
+             WHERE e.TrxID = COALESCE(i.TrxID, h.TrxID)
+               AND e.OrgnlMsgId = COALESCE(i.MsgID, h.MsgID)) ed
 WHERE v.TrxType = 'OC' AND v.ReturnCodeID <> '00' AND ISNULL(v.IsDeleted, 0) = 0
+  AND v.VoucherCode <> '40'
   AND v.[Date] >= '2026-06-01'
-  AND (h.ColumnID IS NULL OR DATEDIFF(DAY, h.[Date], v.[Date]) <> 0)
-ORDER BY v.[Date]
+ORDER BY v.[Date];
+
+INSERT INTO #Out(Line)
+SELECT 'A3 Summary | Unpays=' + CAST(COUNT(*) AS VARCHAR(10))
+       + ' | NextDayOrLater=' + CAST(SUM(CASE WHEN DATEDIFF(DAY, ed.TrxDate, v.[Date]) >= 1 THEN 1 ELSE 0 END) AS VARCHAR(10))
+FROM v_Clearing v (NOLOCK)
+LEFT JOIN t_IncomingTransactions i (NOLOCK) ON i.ColumnID = v.ColumnID AND i.ChequeID = v.ChequeID
+LEFT JOIN t_IncomingTransactionsHistory h (NOLOCK) ON h.ColumnID = v.ColumnID AND h.ChequeID = v.ChequeID
+OUTER APPLY (SELECT TOP 1 e.TrxDate FROM t_IncomingClrTrxExtraDetails e (NOLOCK)
+             WHERE e.TrxID = COALESCE(i.TrxID, h.TrxID) AND e.OrgnlMsgId = COALESCE(i.MsgID, h.MsgID)) ed
+WHERE v.TrxType = 'OC' AND v.ReturnCodeID <> '00' AND ISNULL(v.IsDeleted, 0) = 0
+  AND v.VoucherCode <> '40' AND v.[Date] >= '2026-06-01';
+
+/* ---------- A4. Where BOT's responses are stored: tables used by p_AddClearingFileStatus ---------- */
+INSERT INTO #Out(Line)
+SELECT 'A4 p_AddClearingFileStatus writes to | ' + ISNULL(d.referenced_schema_name + '.', '') + d.referenced_entity_name
+FROM sys.sql_expression_dependencies d
+WHERE d.referencing_id = OBJECT_ID('p_AddClearingFileStatus');
+
+/* ---------- A5. Branch clearing dates (CEDate etc.) ---------- */
+INSERT INTO #Out(Line)
+SELECT 'A5 Branch ' + OurBranchID
+       + ' | SOD ' + ISNULL(CONVERT(VARCHAR(10), SODDate, 120), '-')
+       + ' | EOD ' + ISNULL(CONVERT(VARCHAR(10), EODDate, 120), '-')
+       + ' | CE ' + ISNULL(CONVERT(VARCHAR(10), CEDate, 120), '-')
+FROM t_SystemBranchStatus (NOLOCK)
+ORDER BY OurBranchID;
+
+SELECT Line FROM #Out ORDER BY Seq;
 
 
-/* ---------- STEP 4. Files from the application server (prove it from what was sent) ----------
-   F1  Our file DRUNPBARCTZTZ211120261260 (.Q in <OutgoingFiles>\Files, and the signed copy):
-       - is <OrgnlTxId> missing?            (confirms the mechanism)
-       - does cheque 211 appear TWICE?      (confirms the "28/26" UNION duplication)
-   F2  BOT's response to it (*.V/*.R/*.C/*.RC, ARCHIVEs\20261121\VALIDATIONS): exact reason and time.
-   F3  BOT's inward file of 20-Nov (msg QNF2611201243...): TxId 'doc-001-495-004342_1' WITH "_"?
-       (confirms the 15-Jun underscore strip changes the ID we return)
-   F4  <ClearingErrorLogFilePath>\ClearingErrorLog\20261121.txt
-   F5  CommonMods.dll / EXE version and date in use.
-   F6  The other November incident: cheque no., amount, dates, account. Run STEP 2-3 for it.  */
-
-
-/* ---------- STEP 5. Priority 3 texts (context), save to my_stuff/sql/11_25_2026 ---------- */
-EXEC sp_helptext 'p_AddClearingFileStatus'              -- needed for STEP 6 (where BOT's reject is stored)
-EXEC sp_helptext 'ps_UpdateGLBalance'                   -- EOD: t_TrxClearing -> t_AccountTrxClearing
+/* =====================================================================================
+   PART B - save texts (Results to File), one file per object, to my_stuff/sql/11_25_2026
+   DONE: p_DeleteUnpostedInwardsTrx, sb_ClearEffects, ps_ClearEffects, pc_SystemBranchStatus,
+         p_DoInwardsFileTrxValidationsTZ (none of them moves processed inwards; see NOTES)
+   NEXT (in this order): the only 3 objects that INSERT into t_IncomingTransactionsHistory
+   ===================================================================================== */
+EXEC sp_helptext 'Proc_CreateXMLFiles_Tanzania_CTS'   -- PRIME SUSPECT: non-selected generator, daytime
+EXEC sp_helptext 'ps_UpdateGLBalance'                 -- EOD mover
+EXEC sp_helptext 'rw_IncomingTransactions'            -- report that inserts into History?
+EXEC sp_helptext 'p_AddClearingFileStatus'            -- re-save: the previous file was empty (0 bytes)
 EXEC sp_helptext 'sb_EndOfDay'
-EXEC sp_helptext 'p_AutoUnpayIncomingTxns'              -- no longer called from p_AddInwardsTZ since 13-Jul?
-EXEC sp_helptext 'Proc_CreateXMLFiles_Tanzania_CTS'     -- generator used when nothing is ticked
-EXEC sp_helptext 'f_CRB_ReturnCodeDescriptionsForUnpay'
 
 
-/* ---------- STEP 6. BOT's rejection as stored (table name from p_AddClearingFileStatus) ----------
-   SELECT * FROM <that table> WHERE MessageID = 'DRUNPBARCTZTZ211120261260'                     */
-
-
-/* ---------- STEP 7 (low priority). Who altered t_Transaction + triggers on 21-Nov 16:51? ---------- */
-SELECT TOP 5 'S7' AS Step, * FROM t_DBAuditSpecificationData_21112026
--- then filter on time ~16:51 and object t_Transaction / tr_% using those column names
+/* =====================================================================================
+   AFTER A + B (round 4, to prepare once the mover is known)
+   - Its run time on 21-Nov: audit table t_DBAuditSpecificationData_21112026 or the app log.
+   - BOT's rejection rows (table from A4) for DRUNPBARCTZTZ211120261260.
+   - Files: our DRUNP file (missing OrgnlTxId? cheque twice?), BOT's response, BOT's 20-Nov
+     inward file (TxId with "_1"?), error log 20261121.txt, DLL version, 2nd November case.
+   ===================================================================================== */

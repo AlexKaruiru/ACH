@@ -1,4 +1,4 @@
--- MBSD-1026 !!! DRAFT - DO NOT DEPLOY. Written against an OLD copy of this procedure, not what the client runs.
+-- MBSD-1026 SUPERSEDED by my_stuff/sql/11_25_2026_Fixes (written against the live text). !!! DRAFT - DO NOT DEPLOY. Written against an OLD copy of this procedure, not what the client runs.
 -- !!! Re-apply the "TICKET FIX" changes onto the client's current text (Q9 in 01_READONLY_scripts_for_bank.sql)
 -- !!! once received, and only if Q2 confirms repeated TxIds.
 -- FIX for ticket: TZ unpaid cheque (AM04) return rejected by BOT, cheque settled.
