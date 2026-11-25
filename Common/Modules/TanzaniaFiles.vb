@@ -761,6 +761,23 @@ Namespace TZ
                                             chq.LclInstrm = r("LclInstrm").ToString()
                                             chq.CtgyPurp = r("CtgyPurp").ToString()
                                             chq.ReqdColltnDt = IIf(r("ReqdColltnDt").ToString() = "Jan  1 1900 12:00AM", "", r("ReqdColltnDt").ToString())
+                                            ' MBSD-1026: BOT rejects the WHOLE return file when OrgnlTxId is missing (empty tags are
+                                            ' stripped before saving, so a blank value = missing element). Stop such an item here, tell
+                                            ' the operator at once, and leave it pending (IsGenerated = 0) so it does not take the
+                                            ' other returns in the file down with it.
+                                            Dim missing As New List(Of String)
+                                            If String.IsNullOrWhiteSpace(chq.OrgnTrxID) Then missing.Add("OrgnlTxId (TrxID)")
+                                            If String.IsNullOrWhiteSpace(chq.OrgnlMsgId) Then missing.Add("OrgnlMsgId")
+                                            If String.IsNullOrWhiteSpace(chq.OrgnlEndToEnd) Then missing.Add("OrgnlEndToEndId")
+                                            If missing.Count > 0 Then
+                                                Dim msg As String = "Unpaid cheque " & r("ChequeId").ToString() & " (TrxRowID " & chq.trxID & ", amount " & chq.Amount.ToString("N2") &
+                                                                    ") NOT included in the return file - missing " & String.Join(", ", missing) &
+                                                                    ". The original inward record could not be found. Escalate before BOT cut-off."
+                                                result.AddError(msg)
+                                                Modscan.ErrorLog(msg, "Unpaid Cheques Generation - original IDs missing")
+                                                MessageBox.Show(msg, "Unpaid cheque NOT generated", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                                                Continue For
+                                            End If
                                             l.Add(chq)
                                         Catch ex As Exception
                                             result.AddError("Failed to process unpaid cheque " & r("ChequeId").ToString() & ": " & ex.Message)
