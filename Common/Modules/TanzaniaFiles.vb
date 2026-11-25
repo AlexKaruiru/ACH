@@ -770,6 +770,14 @@ Namespace TZ
                                     Next
                                     If l.Count > 0 Then
                                         Dim msgId As String = UnpaidCheques(l, DestBankBIC, l(0).CurrencyCode, Modscan.cWORKING_DATE, Counter, l(0).ValueDate)
+                                        ' MBSD-1026: UnpaidCheques returns Nothing when the XML could not be built/saved.
+                                        ' Previously the rows were still flagged IsGenerated = 1 (with an empty Reference),
+                                        ' so the return silently never went to BOT and the cheque settled.
+                                        If String.IsNullOrEmpty(msgId) Then
+                                            result.AddError("Unpaid cheque file was NOT created for bank " & BankArr.Item(k) & " / OrgnlMsgId " & MsgIdArr.Item(MsgIdK) & ". Items left pending - check ErrorLog and regenerate.")
+                                            Modscan.ErrorLog("Unpaid cheque file not created, items left pending. Bank " & BankArr.Item(k) & " OrgnlMsgId " & MsgIdArr.Item(MsgIdK), "Unpaid Cheques Generation")
+                                            Continue For
+                                        End If
                                         For Each s As ChequeDetails In l
                                             Try
                                                 Select Case SystemType.ToUpper.Trim
@@ -1918,7 +1926,10 @@ Namespace TZ
             Dim xDt As Date = CDate(sDt & " " & STm)
             Dim sDt1 As String = Modscan.WORKING_DATE.ToString("yyyy-MM-dd")
             Dim STm1 As String = STm.Replace(":", "")
-            Dim msgId As String = "DRUNP" & BIC & Modscan.FDATE.ToString("ddMMyyyy") & STm1 + Cntr
+            ' MBSD-1026: Was: ... & STm1 + Cntr  -> "+" did numeric addition (e.g. "1430"+2 = 1432), so a file at 14:30 #2
+            ' and one at 14:31 #1 got the SAME MsgId (BOT rejects duplicates) and times before 10:00 lost a digit.
+            ' Now: HHmmss + 3-digit counter, always unique per run/second. Max length 5+11+8+6+3 = 33 (<= 35).
+            Dim msgId As String = "DRUNP" & BIC & Modscan.FDATE.ToString("ddMMyyyy") & Now.ToString("HHmmss") & CInt(Cntr).ToString("000")
             Dim stCurrCode As String = ""
             If ccy = "0" Or ccy = "TZS" Then
                 stCurrCode = "TZS"
