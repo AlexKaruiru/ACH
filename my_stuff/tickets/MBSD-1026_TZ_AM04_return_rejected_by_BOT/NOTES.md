@@ -303,3 +303,176 @@ Questions the revised round answers:
 | `DRAFT_FIX_on_OLD_copy_...sql` | Do not deploy. Written against the old procedure copy. |
 
 Originals before the fix: see git history and `my_stuff/sql/`.
+
+## 26-Nov-2026: new report, cheque TZS 5,120,000
+
+### The report
+- Unpaid on 25-Nov with reason "irregular account name" (CH11), not AM04. On 26-Nov BOT still showed it as "accepted, ready for settlement" (settles ~13:00).
+- The item has left our verification queue, so the officer would have to debit the customer manually.
+- The bank sees our .Q file but no BOT response for it.
+
+### Production file locations (Maendeleo clearing server, E:)
+| What | Path |
+|---|---|
+| Install / working folder | `E:\Clearing_Production` |
+| Signed outgoing returns, archived by date | `E:\Clearing_Production\Prod_Files\ToTach\Archive\Out\<yyMMdd>\DRUNP….Q` |
+| Gateway pick-up archive (proves the gateway took the file) | `E:\Clearing_Production\Prod_Files\ToTach\Outgoing\inputarchive\<yyyy-MM-dd>\DRUNP….Q` |
+| Unsigned copies | `<OutgoingFiles>\Temp` and `\Files`. **Deleted** by `Clear_Files_Arc` after every successful signing, so none are kept. |
+| Windows user on the server | `smyaka`. There is no `C:\Users\smyaka\Desktop`, so write output to `$env:TEMP`. |
+
+- The config the user pasted on 26-Nov is **not** production. It is our dev App.config: `C:\GeneratedDemoTestFiles…`, `Sign=false`, `configFilePath` on Alex's Desktop. The real one is the `.exe.config` beside the tool's exe on the clearing server. Its `OutgoingFiles` setting is probably `E:\Clearing_Production\Prod_Files\ToTach`. Do not copy any credentials into the notes.
+- File naming: `DRUNP` + payee BIC + ddMMyyyy + time. The time part is from the old `HHmm`+counter logic, so `1038` means about 10:37.
+
+### How to read a signed .Q (steps that worked, PowerShell 5.1 on the server)
+The .Q is CMS **signed** (`.signed.CMS` from BRCS), not encrypted. No key is needed.
+```powershell
+Add-Type -AssemblyName System.Security; $f='E:\Clearing_Production\Prod_Files\ToTach\Archive\Out\261125\DRUNPCORUTZTZ251120261038.Q'; $b=[IO.File]::ReadAllBytes($f); try { $b=[Convert]::FromBase64String(([Text.Encoding]::ASCII.GetString($b) -replace '-----[^-]+-----','' -replace '\s','')) } catch {}; $c=New-Object System.Security.Cryptography.Pkcs.SignedCms; $c.Decode($b)
+[Text.Encoding]::UTF8.GetString($c.ContentInfo.Content) | Out-File "$env:TEMP\DRUNPCORUTZTZ251120261038.xml" -Encoding utf8; notepad "$env:TEMP\DRUNPCORUTZTZ251120261038.xml"
+```
+- Find every file for a MsgId: `Get-ChildItem 'E:\Clearing_Production\Prod_Files' -Recurse -File | Where-Object { $_.Name -like '*251120261038*' }`
+- Scan the whole archive (count TxInf, OrgnlTxId, unique ids and settlement date per file): see `evidence/archive_scan_26Nov2026.txt`.
+
+### Decoded DRUNPCORUTZTZ251120261038.Q (built 25-Nov 10:37)
+- OrgnlMsgId `QNF2611241504550000002380301`: the inward came in on 24-Nov at 15:04.
+- OrgnlTxId `6C3839A503BB4399B850BAA409CA15A9`, EndToEnd `970071b6…` and reason `CH11` are all **present**.
+- Debtor: JERUSALEM MBEZI BEACH SCHOOL PROJECT, account 3787826027. Payee: EMANUEL WILBAD NKYA at CRDB (CORUTZTZ), account 0152612105900.
+- The same TxInfAndSts appears twice.
+- **`IntrBkSttlmDt` = `0001-01-01`**, an empty date.
+- The gateway took it: there is a copy in `Outgoing\inputarchive\2026-11-25`. No file named after the MsgId came back from BOT.
+
+### Archive scan, Dec-2025 to 25-Nov-2026 (`evidence/archive_scan_26Nov2026.txt`)
+- **Duplicates are not the cause.** Every unpaid-return file since Dec-2025 has each transaction twice (TxInf=2, Unique=1; some have 3), and BOT has accepted them all year. Withdrawn as a cause. Clean-up only.
+- **Settlement date is the anomaly.** Since 06-Mar-2026, every file has `IntrBkSttlmDt` equal to the day it was built. That matches the code `txnInf.OrgnlTxRef.IntrBkStmDt = Date.Today` (`TanzaniaFiles.vb` ~2008, present since the first git upload on 25-Feb-2026). Only these files have `0001-01-01`:
+  - two files on 28-Jan-2026, which also have no BIC and no OrgnlTxId;
+  - two files on 12-Feb-2026;
+  - **25-Nov-2026 DRUNPCORUTZTZ251120261038**.
+  The current code cannot produce `0001-01-01`. **So the 25-Nov return was built by an OLDER build of the tool** (pre-Feb-2026 logic), not the exe that built every return from March to 23-Nov. The likely BOT rejection is the invalid or empty settlement date. Confirm with BOT's response.
+  - To find out: which PC and user generated it at 10:37, which exe/DLL they ran (path, file version, date), and whether any DLL was replaced or rolled back around 24/25-Nov.
+- **Cheque 211 files** (21-Nov, `DRUNPBARCTZTZ211120261137` and `…1260`) both have OrgnlTxId present and SttlmDt 2026-11-21. So the "missing OrgnlTxId" fault was **not** an absent element in what we sent. The value may be wrong instead: p_AddInwardsTZ strips `_` (15-Jun), so we store `doc-001-495-0043421` while BOT has `doc-001-495-004342_1`. BOT would not match it and would report the original transaction as missing. **Print the OrgnlTxId values of those files to confirm.**
+- **27-Jul-2026 09:32 `DRUNPCORUTZTZ27072026933`**: TxInf=2, OrgnlTxId=0, a truly blank OrgnlTxId. It was re-generated at 12:50 the same day with the id present. This is an earlier case of the History-move fault (fixed 25-Nov).
+- The ~1260 / ~1061 MsgIds (time over 59) confirm the Option Strict string+number bug in the MsgId.
+
+### Corrections to earlier statements
+- "The duplicate makes BOT reject": **wrong**, because duplicates have always been there.
+- "Cheque 211's file had no OrgnlTxId": **not supported** by the archive. Suspect the `_`-stripped TrxID value instead.
+
+### 26-Nov: decoded key fields + tool builds on the server
+| File | OrgnlMsgId | OrgnlTxId | Rsn | Amt | SttlmDt |
+|---|---|---|---|---|---|
+| DRUNPBARCTZTZ211120261137 (21-Nov 11:36) | QNF2611201243410000002379491 | **doc-001-495-0043421** | AM04 | 5,323,100 | 2026-11-21 |
+| DRUNPBARCTZTZ211120261260 (21-Nov 12:59, resend) | same | **doc-001-495-0043421** | AM04 | 5,323,100 | 2026-11-21 |
+| DRUNPCORUTZTZ23112026933 (23-Nov, OK) | QNF2611201727530000002379561 | 982A5733… (GUID) | CH01 | 750,000 | 2026-11-23 |
+| DRUNPCORUTZTZ251120261038 (25-Nov) | QNF2611241504550000002380301 | 6C3839A5… (GUID) | CH11 | 5,120,000 | **0001-01-01** |
+
+**Cheque 211: root cause revised.**
+- Both returns were built 6 minutes and 1.5 hours after the unpay, and both carried an OrgnlTxId. But the value was **`doc-001-495-0043421`**, while BOT's original TxId is **`doc-001-495-004342_1`**.
+- The `_` was stripped at load by `p_AddInwardsTZ` line 97 (`REPLACE(@TrxID,'_','')`, bnyaswa 15-Jun-2026). BOT could not match the original transaction, so it reported "missing OrgnTxID".
+- Only banks whose TxIds contain `_` are hit (ABSA/BARCTZTZ `doc-…_n`). Banks that send GUID TxIds are not affected, which is why it is rare.
+- The History-move fault (fixed 25-Nov) is real: the 27-Jul file had a blank OrgnlTxId. But it was **not** what broke cheque 211.
+- **Ask Brenda why `_` is stripped.** A fix must keep the original TxId for the return, either by not stripping it or by storing the original.
+
+**Cheque 5,120,000 (25-Nov): wrong tool build suspected.**
+- Tool folders under `E:\Clearing_Production`:
+  - `Debug 3_4_2026` (04-Mar-2026, newest; matches git 87cb9ac 2026-03-04);
+  - `Debug 3_4_2026\Debug 2_18_2026` (18-Feb);
+  - `…\Confused` and `Debug\Debug\Confused` (17-Feb).
+  - Exe `BRNETUploadDownload.exe` 1.0.0.3 in all of them; the DLLs are version 1.0.0.0, so the version number does not help.
+- Every return from 06-Mar to 23-Nov has SttlmDt = the build day, which is the 04-Mar build. The 25-Nov file has 0001-01-01, the same as the 28-Jan and 12-Feb files. So it was most likely generated with an **older build** (one of the Feb folders) or on another PC with an old copy.
+- Next: find which exe is running or shortcut-linked and who ran it at 10:37 on 25-Nov (processes, .lnk targets, all copies of the exe on C:/E:, other PCs).
+
+### 26-Nov: which tool is actually running (clearing PC = the server on AnyDesk, user smyaka)
+```
+E:\Clearing_Production\Debug 3_4_2026\BRNETUploadDownload.exe   | started 23-Nov 11:48 | smyaka
+E:\Clearing_Production\Prod_FileGenTool\BRNETUploadDownload.exe | started 24-Nov 08:55 | smyaka
+E:\Clearing_Production\Prod_FileGenTool\BRNETUploadDownload.exe | started 25-Nov 08:28 | smyaka
+E:\Clearing_Production\Prod_FileGenTool\BRNETUploadDownload.exe | started 26-Nov 08:34 | smyaka
+```
+- **Four instances are open at once, from two different folders.** On 24–26 Nov the operator started the tool from **`Prod_FileGenTool`**, not from `Debug 3_4_2026`.
+- `Prod_FileGenTool` did not appear in the newest-30 exe/dll listing, so its binaries are dated **before 17-Feb-2026**. That makes it the prime suspect for the 0001-01-01 settlement date in the 25-Nov return. The bank believes they run the March build. Confirm by comparing hashes of `Prod_FileGenTool` against `Debug 3_4_2026`.
+- The shortcut scan failed (Access denied on `C:\Users\*`).
+
+### Why `_` is stripped (p_AddInwardsTZ line 97, bnyaswa 15-Jun): unknown, Brenda unavailable
+- Inward cheques: `chq.trxID = c.PmtId.TxId` (TanzaniaFiles.vb ~4046). The stripped value goes to `t_IncomingTransactions.TrxID` **and** `t_IncomingClrTrxExtraDetails.TrxID` (insert ~1207). The original TxId is **not stored anywhere**.
+- For returns of our own cheques (TrxType ID), the procedure does `CAST(@TrxID AS BIGINT)` against `t_AccountTrxClearing.TrxRowID` (~326/346, inside TRY). A `_` would make that CAST fail, so this is a plausible reason for the strip. Not confirmed.
+- Fix options that keep her change:
+  - A. Strip only when the result is numeric (her case). Leave IDs like `doc-001-495-004342_1` untouched.
+  - B. Keep stripping, but save the original TxId in a new nullable column and use it in the generator's OrgnlTxId.
+
+### 26-Nov: hash check, Prod_FileGenTool vs Debug 3_4_2026: CONFIRMED old build
+- In `Prod_FileGenTool`, `BrClearing.dll`, `BRClrLib.dll`, `BRClearingUtil.dll`, `BRcatDS.dll`, `BRRTGSProcessing.dll` and `BRNETUploadDownload.exe` are dated **22-Dec-2025** and differ (`same=False`) from the 04-Mar-2026 build. `ImageFileRead.dll` and `BRClearingEncryptDecrypt.dll` also differ.
+- The `.exe.config` files are identical in both folders, so both copies use the same DB and folders.
+- Conclusion: the 25-Nov return (settlement date 0001-01-01) was built by the Dec-2025 build in `Prod_FileGenTool`. The returns from Mar to 23-Nov came from the March build.
+- Still open: why the operator switched to `Prod_FileGenTool` on 24-Nov (a new shortcut?).
+- Decision (Alex): go with option A for the `_` strip. Scripts are in `my_stuff/sql/11_26_2026_Fixes/`: the backup, the CREATE OR ALTER fix, and the reopen script for the 5,120,000 cheque (ROLLBACK by default).
+
+### 26-Nov: BOT responses FOUND
+- BOT's response files land in `E:\Clearing_Production\Prod_Files\FromTach\Incoming\`. After loading they are copied to `…\Incoming\Backup\<yyyyMMdd_HHmmss>\MBTLTZTZ<yyMMddHHmmss><seq>.<V|R|RC>`.
+- Prod config (`Debug 3_4_2026\BRNETUploadDownload.exe.config`):
+  - `Archive` = `E:\Clearing_Production\Prod_Files\ToTach\Archive`
+  - `ClearingErrorLogFilePath` = `E:\Clearing_Production\Prod_Files\Logs\`
+  - `ErrorLogPath` = `C:\BRExceptionLog\`
+  - `IncomingFiles` = `C:\temp\Incoming` and `IncomingSignedFiles` = `C:\GeneratedDemoTestFiles\Incoming` (look like leftover dev values)
+  - there is no `Responses` key
+- Responses that mention our returns:
+  - `Backup\20261121_125955\MBTLTZTZ261121125914984.V` → for `DRUNPBARCTZTZ211120261260` (cheque 211 resend)
+  - `Backup\20261125_103728\MBTLTZTZ261125103652048.V` → for `DRUNPCORUTZTZ251120261038` (5,120,000). It came back within seconds of sending and was loaded at 10:37:28, so it looks like an immediate validation response.
+- To do: read both .V files (status and reason), and find the response for `DRUNPBARCTZTZ211120261137`.
+
+### 26-Nov: BOT's own words, BOTH ROOT CAUSES CONFIRMED
+**Cheque 211** (`MBTLTZTZ261121125914984.V`, the response to `DRUNPBARCTZTZ211120261260`):
+- `GrpSts RJCT B09` "TACH: All items rejected".
+- Per item: `TxSts RJCT`, `Rsn MD03` "**TACH: Missing original transaction OrgnlTxId**".
+- BOT could not find any original transaction with the OrgnlTxId we sent, `doc-001-495-0043421`, because its id is `doc-001-495-004342_1`.
+- Cause: the `_` stripped in p_AddInwardsTZ (bnyaswa 15-Jun). Fix: `11_26_2026_Fixes/p_AddInwardsTZ.sql` (option A).
+- BOT also replied to the first send (11:36) with `Backup\20261121_113723\MBTLTZTZ261121113630983.V`, presumably the same reason.
+
+**Cheque 5,120,000** (`MBTLTZTZ261125103652048.V`, the response to `DRUNPCORUTZTZ251120261038`):
+- `GrpSts RJCT B09`.
+- Per item: `Rsn DT01` "**TACH: Invalid date Item invalid because original bulk settlement date: 20261125 not between 00011226 and 00010104**". BOT built the allowed window from the `0001-01-01` we sent.
+- Cause: the return was generated with the Dec-2025 build in `Prod_FileGenTool`, which does not set IntrBkSttlmDt. Fix: use only the March build (`Debug 3_4_2026`) and retire the old folder.
+
+**Common gap:** BOT's rejection came back within seconds both times, and the tool loaded it (Incoming\Backup). Nobody was alerted, and the item stayed marked generated. Improvement: alert on `RJCT` and reopen the item. That needs an app change.
+
+**BOT response files:** `E:\Clearing_Production\Prod_Files\FromTach\Incoming\Backup\<yyyyMMdd_HHmmss>\MBTLTZTZ….V`. They are plain XML followed by a `|<base64 signature>` tail. BOT echoes our StsId (`yyyyMMdd_<RemittanceInfo>`) in its `OrgnlTxId` field.
+
+### 26-Nov: p_AddInwardsTZ option A DEPLOYED on BRNET_MB_LIVE
+- Pre-check:
+  - `p_AddInwardsTZ` was last modified 2026-07-13 11:04 (the bnyaswa auto-unpay change), so it is the same as the 25-Nov saved text. Brenda's own backup `p_AddInwardsTZ_1206` exists (created 12-Jun, modified 15-Jun).
+  - Compatibility level is 150.
+  - TRY_CAST test: `doc-001-495-004342_1` is kept; `80031940_1` becomes `800319401`; a GUID is unchanged.
+- Backup `p_AddInwardsTZ_26112026` created 11:43:19. Fix altered 11:44:06. `FixPresent` = 3075, `BackupHasFix` = 0.
+- The active shortcut on the clearing PC points to `E:\Clearing_Production\Debug 3_4_2026\BRNETUploadDownload.exe` (the March build). So the `Prod_FileGenTool` copies opened on 24–26 Nov were started some other way (directly from the folder, or a pinned or recent entry).
+- Still open:
+  - stop the 4 running processes and rename the old exe;
+  - reopen script for the 5,120,000 cheque, only if BOT agrees;
+  - app alert on BOT RJCT;
+  - bank messages.
+- 26-Nov: stopped all 4 tool processes (17572, 15568, 13888, 22140); none are left running. Renamed `E:\Clearing_Production\Prod_FileGenTool\BRNETUploadDownload.exe` to `BRNETUploadDownload.exe.OLD_Dec2025`. The tool must now be opened only from `Debug 3_4_2026`, which is where the shortcut points. To undo, rename it back.
+- 26-Nov ~12:00: ran the reopen script dry with ROLLBACK. Before: `t_AccountTrxClearing` TrxRowID **80124011**, OC, CH11, 5,120,000.00, IsGenerated 1, SessNo 1, Reference `DRUNPCORUTZTZ251120261038`. Rows updated: t_TrxClearing 0, t_AccountTrxClearing 1. After (inside the tran): IsGenerated 0, Reference NULL. Rolled back. The next step is to run it with COMMIT and regenerate.
+- 26-Nov ~12:10: the bank spoke to its customer and decided **not** to re-send the return for the 5,120,000 cheque. The reopen was **not** committed (only the ROLLBACK dry run was run), so TrxRowID 80124011 stays IsGenerated 1. The bank will handle the settled amount itself.
+- To verify the fixes on real traffic: `04_VERIFY_fixes_after_26Nov.sql` (DB side) and the archive scan for new DRUNP files (file side). See the next unpaid return and the next ABSA inward.
+- 26-Nov 12:24: the tool was reopened. Exactly one instance is running: `Debug 3_4_2026\BRNETUploadDownload.exe` (PID 23732), the March build. Decision: wait for the next real unpaid cheque to confirm the fix end to end (BOT .V must show ACCP).
+- 26-Nov 12:31: there are two desktop shortcuts. 'BRNETUploadDownload - 3_4_2026' points to `Debug 3_4_2026` (March, correct). **'Tach Gen Prod Tool'** points to `E:\Clearing_Production\Debug\Debug\BRNETUploadDownload.exe`, another copy whose build is not yet checked. It must be repointed or disabled.
+- 26-Nov 12:35: copies of the tool on E:\Clearing_Production. Only **`Debug 3_4_2026`** matches the March build (hash equal, and it contains the 87cb9ac change). Every other runnable copy is older:
+  - `E:\Clearing_Production\BRNETUploadDownload.exe` (BrClearing 12-Feb-2026)
+  - `Debug\Debug` (17-Feb; the "Tach Gen Prod Tool" shortcut points here) and `Debug\Debug\Confused` (17-Feb)
+  - `Debug 3_4_2026\Confused` (17-Feb), `Debug 3_4_2026\Debug 2_18_2026` (18-Feb), `…\Debug 2_18_2026\Confused` (17-Feb)
+  - `Maendeleo Generation Tool\…\CBT tool` and `…\CBT tool\copy` (22-Dec-2025)
+  - `Prod_FileGenTool\copy` (22-Dec-2025); the `Prod_FileGenTool` exe itself is already renamed .OLD_Dec2025
+  - `Utility\Utility` (03-Nov-2025)
+  - `wetransfer_maendeleo-tool_2026-01-07_0638\Maendeleo Tool` (07-Jan-2026)
+- Production commit check: `Debug 3_4_2026\BrClearing.dll` = git 87cb9ac (04-Mar-2026).
+- 26-Nov ~12:40: desktop shortcuts for smyaka (`C:\Users\smyaka\OneDrive - maendeleo bank\Desktop`), before → after:
+  - **`BackUp Utility Tool.lnk` → `Prod_FileGenTool` (Dec-2025)**. This is the most likely way the old build was opened on 24–26 Nov.
+  - `Tach Gen Prod Tool.lnk` → `Debug\Debug` (17-Feb)
+  - `BRNETUploadDownload - Shortcut.lnk` → `Y:\BRNETUploadDownload.exe` (a network drive, build not checked)
+  - `BRNETUploadDownload - 3_4_2026.lnk` → `Debug 3_4_2026` (already correct)
+  All four now point to `E:\Clearing_Production\Debug 3_4_2026\BRNETUploadDownload.exe`. Still open: check the Y:\ copy's build, which other PCs may use.
+- 26-Nov: `Y:\` is not reachable from the clearing server, so that shortcut was already dead there. Still to ask the bank: does any other PC generate clearing files?
+- **Status, 26-Nov ~12:45:** both DB fixes are live; only the March build can be opened from this PC; all shortcuts are repointed. Still pending:
+  - end-to-end confirmation on the next real unpay (BOT .V must show ACCP);
+  - the rolled-back test of p_AddInwardsTZ;
+  - whether the other old copies can be disabled;
+  - the app alert on RJCT;
+  - a git commit.
+- 26-Nov 12:51: deleted the extra desktop shortcuts (they went to the Recycle Bin). Only **'Tach Gen Prod Tool'** is left, pointing to `E:\Clearing_Production\Debug 3_4_2026\BRNETUploadDownload.exe` with Start in `Debug 3_4_2026`. Taskbar and Start-menu shortcuts were not checked.

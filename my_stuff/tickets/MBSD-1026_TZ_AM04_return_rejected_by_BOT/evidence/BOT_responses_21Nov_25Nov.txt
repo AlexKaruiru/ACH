@@ -1,0 +1,19 @@
+BOT TACH validation responses (.V), read 26-Nov-2026 from E:\Clearing_Production\Prod_Files\FromTach\Incoming\Backup\ (signature tail omitted)
+
+== 20261121_125955\MBTLTZTZ261121125914984.V  (response to DRUNPBARCTZTZ211120261260, cheque 211, TZS 5,323,100)
+MsgId QVF2611211259140000002379641  CreDtTm 2026-11-21T12:59:14+03:00
+GrpSts RJCT  Rsn B09  "TACH: All items rejected"
+Item x2: OrgnlEndToEndId AB019MK1795167518917  OrgnlTxId(echo of our StsId) 20261121_261121004
+         TxSts RJCT  Rsn MD03  "TACH: Missing original transaction OrgnlTxId"
+         IntrBkSttlmAmt 5323100.00  IntrBkSttlmDt 2026-11-21  DbtrAgt MBTLTZTZ  CdtrAgt BARCTZTZ
+Our file sent OrgnlTxId = doc-001-495-0043421 ; BOT original TxId = doc-001-495-004342_1
+
+== 20261125_103728\MBTLTZTZ261125103652048.V  (response to DRUNPCORUTZTZ251120261038, TZS 5,120,000)
+MsgId QVF2611251036520000002380811  CreDtTm 2026-11-25T10:36:52+03:00
+GrpSts RJCT  Rsn B09  "TACH: All items rejected"
+Item x2: OrgnlEndToEndId 970071b675374ab5af60202228442468  OrgnlTxId(echo) 20261125_261125014
+         TxSts RJCT  Rsn DT01  "TACH: Invalid date Item invalid because original bulk settlement date: 20261125 not between 00011226 and 00010104"
+         IntrBkSttlmAmt 5120000.00  IntrBkSttlmDt 0001-01-03  DbtrAgt MBTLTZTZ  CdtrAgt CORUTZTZ
+Our file sent IntrBkSttlmDt = 0001-01-01 (built with Dec-2025 build in E:\Clearing_Production\Prod_FileGenTool)
+
+== 20261121_113723\MBTLTZTZ261121113630983.V  (response to DRUNPBARCTZTZ211120261137, first send of cheque 211) - not printed yet
